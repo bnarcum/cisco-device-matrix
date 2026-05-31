@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Html, OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
 import type { Device } from '../data/cisco'
 import { CATEGORY_ORDER, CATEGORY_LABELS } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
@@ -35,7 +36,7 @@ export function ShowroomScene({ devices, selected, onSelect }: Props) {
       <ShowroomFloor />
 
       {layout.rings.map((ring) => (
-        <RingLabel
+        <CategoryRing
           key={ring.category}
           radius={ring.radius}
           label={CATEGORY_LABELS[ring.category]}
@@ -87,9 +88,67 @@ function layoutByCategory(devices: Device[]) {
 }
 
 /**
- * HTML pill label anchored at the outer edge of a category's invisible ring,
- * acting as a quiet wayfinding cue without painting big blue tracks on the
- * floor.
+ * A faint hairline ring on the showroom floor — just enough to group devices
+ * by category visually, without competing with the selection spotlight. The
+ * geometry is a thin band and the shader keeps both core + bloom alphas very
+ * low so the line reads like chalk on a stage, not a neon track.
+ */
+function CategoryRing({ radius, label }: { radius: number; label: string }) {
+  const uniforms = useMemo(
+    () => ({
+      uRadius: { value: radius },
+      uColor: { value: new THREE.Color('#049fd9') },
+    }),
+    [radius],
+  )
+
+  return (
+    <group position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh renderOrder={2}>
+        <ringGeometry args={[radius - 0.04, radius + 0.04, 192]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          uniforms={uniforms}
+          vertexShader={ringVert}
+          fragmentShader={ringFrag}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <RingLabel label={label} radius={radius} />
+    </group>
+  )
+}
+
+const ringVert = /* glsl */ `
+  varying vec2 vLocal;
+  void main() {
+    vLocal = position.xy;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+// Soft hairline with a wider, even softer bloom so the rim of the band fades
+// gracefully into the floor instead of cutting a hard edge.
+const ringFrag = /* glsl */ `
+  precision highp float;
+  varying vec2 vLocal;
+  uniform float uRadius;
+  uniform vec3 uColor;
+
+  void main() {
+    float r = length(vLocal);
+    float d = abs(r - uRadius) / 0.04;
+    float core  = 1.0 - smoothstep(0.0, 0.35, d);
+    float bloom = 1.0 - smoothstep(0.0, 1.4,  d);
+    float alpha = clamp(core * 0.22 + bloom * 0.06, 0.0, 1.0);
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
+
+/**
+ * HTML pill label anchored at the outer edge of each ring. Reuses the Cisco
+ * blue border so the label visually belongs to the ring it sits on.
  */
 function RingLabel({ radius, label }: { radius: number; label: string }) {
   return (
@@ -104,9 +163,9 @@ function RingLabel({ radius, label }: { radius: number; label: string }) {
         style={{
           padding: '5px 11px',
           borderRadius: 999,
-          background: 'rgba(5, 8, 15, 0.72)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          color: 'rgba(230, 240, 250, 0.85)',
+          background: 'rgba(5, 8, 15, 0.78)',
+          border: '1px solid rgba(4, 159, 217, 0.35)',
+          color: '#e6f0fa',
           fontSize: 11,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
