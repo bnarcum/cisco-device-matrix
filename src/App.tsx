@@ -61,6 +61,22 @@ export default function App() {
             Finder
           </button>
         </nav>
+        <a
+          className="source-link"
+          href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open the official Cisco/Webex Collaboration Device Product Matrix brochure (PDF, opens in a new tab)"
+          title="Open the official Cisco/Webex brochure (PDF)"
+        >
+          <span className="source-link-icon" aria-hidden>
+            ⤓
+          </span>
+          <span className="source-link-text">
+            <span className="source-link-label">Source brochure</span>
+            <span className="source-link-meta">Cisco · Webex · PDF</span>
+          </span>
+        </a>
       </header>
 
       <div className="canvas-wrap">

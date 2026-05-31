@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { Html } from '@react-three/drei'
+import { useMemo, useRef } from 'react'
+import { Html, SpotLight } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Device } from '../data/cisco'
@@ -92,7 +92,7 @@ export function DevicePedestal({
               selected={selected}
             />
           </group>
-          {/* Subtle shadow projected on the pedestal disc */}
+          {/* Subtle contact shadow under the billboard */}
           <mesh
             position={[0, 0.003, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
@@ -111,15 +111,7 @@ export function DevicePedestal({
           <DeviceModel device={device} highlighted={selected} />
         </group>
       )}
-      {/* Pedestal disc */}
-      <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.36, 0.4, 48]} />
-        <meshStandardMaterial
-          color={selected ? '#049FD9' : '#1e2a3c'}
-          emissive={selected ? '#049FD9' : '#0a1a2a'}
-          emissiveIntensity={selected ? 0.8 : 0.2}
-        />
-      </mesh>
+      {selected && <SelectionSpot footprint={targetSize} />}
       {showLabel && (
         <Html
           position={[
@@ -150,3 +142,95 @@ export function DevicePedestal({
     </group>
   )
 }
+
+/**
+ * Soft volumetric spotlight + radial pool of light on the floor. We use this
+ * instead of a flat blue ring to indicate selection — the cone visually
+ * "spotlights" the device the way a stage light would.
+ *
+ * The spot is parented to the device group, so it follows the device wherever
+ * it flies to in the Finder grid.
+ */
+function SelectionSpot({ footprint }: { footprint: number }) {
+  const target = useMemo(() => {
+    const obj = new THREE.Object3D()
+    obj.position.set(0, 0, 0)
+    return obj
+  }, [])
+
+  const uniforms = useMemo(
+    () => ({
+      uColor: { value: new THREE.Color('#049fd9') },
+      uTime: { value: 0 },
+    }),
+    [],
+  )
+
+  useFrame(({ clock }) => {
+    uniforms.uTime.value = clock.getElapsedTime()
+  })
+
+  const poolRadius = Math.max(0.75, footprint * 0.55)
+
+  return (
+    <group>
+      {/* Empty target placed at the pedestal so the cone points straight down. */}
+      <primitive object={target} />
+
+      {/* drei's <SpotLight> renders a soft visible cone as well as casting
+          real three.js spotlight illumination on the floor. */}
+      <SpotLight
+        position={[0, 3.4, 0]}
+        target={target}
+        color="#049fd9"
+        intensity={9}
+        distance={5.2}
+        angle={0.42}
+        penumbra={0.85}
+        attenuation={3.2}
+        anglePower={5.5}
+        radiusTop={0.02}
+        radiusBottom={0.9}
+      />
+
+      {/* Floor pool — radial gradient that always reads on any background,
+          even when the volumetric cone is at a shallow camera angle. */}
+      <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
+        <circleGeometry args={[poolRadius, 96]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          uniforms={uniforms}
+          vertexShader={poolVert}
+          fragmentShader={poolFrag}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+const poolVert = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+const poolFrag = /* glsl */ `
+  precision highp float;
+  varying vec2 vUv;
+  uniform vec3 uColor;
+  uniform float uTime;
+
+  void main() {
+    vec2 c = vUv - 0.5;
+    float d = length(c) * 2.0;
+    // Soft falloff: bright near center, transparent at the rim.
+    float core = 1.0 - smoothstep(0.0, 0.45, d);
+    float halo = 1.0 - smoothstep(0.0, 1.0, d);
+    float pulse = 0.92 + 0.08 * sin(uTime * 1.8);
+    float a = clamp(core * 0.55 + halo * 0.22, 0.0, 1.0) * pulse;
+    gl_FragColor = vec4(uColor, a);
+  }
+`

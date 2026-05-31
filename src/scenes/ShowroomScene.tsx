@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Html, OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
 import type { Device } from '../data/cisco'
 import { CATEGORY_ORDER, CATEGORY_LABELS } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
@@ -36,7 +35,7 @@ export function ShowroomScene({ devices, selected, onSelect }: Props) {
       <ShowroomFloor />
 
       {layout.rings.map((ring) => (
-        <CategoryRing
+        <RingLabel
           key={ring.category}
           radius={ring.radius}
           label={CATEGORY_LABELS[ring.category]}
@@ -88,72 +87,11 @@ function layoutByCategory(devices: Device[]) {
 }
 
 /**
- * Track-style ring with a gradient glow falloff (built as a custom shader on
- * a thin ring geometry), plus an HTML label pill that stays screen-sharp.
+ * HTML pill label anchored at the outer edge of a category's invisible ring,
+ * acting as a quiet wayfinding cue without painting big blue tracks on the
+ * floor.
  */
-function CategoryRing({ radius, label }: { radius: number; label: string }) {
-  const uniforms = useMemo(
-    () => ({
-      uRadius: { value: radius },
-      uColor: { value: new THREE.Color('#049fd9') },
-    }),
-    [radius],
-  )
-
-  return (
-    <group position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh renderOrder={2}>
-        <ringGeometry args={[radius - 0.08, radius + 0.08, 192]} />
-        <shaderMaterial
-          transparent
-          depthWrite={false}
-          uniforms={uniforms}
-          vertexShader={ringVert}
-          fragmentShader={ringFrag}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      <RingLabel label={label} radius={radius} />
-    </group>
-  )
-}
-
-const ringVert = /* glsl */ `
-  varying vec2 vLocal;
-  void main() {
-    vLocal = position.xy;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`
-
-const ringFrag = /* glsl */ `
-  precision highp float;
-  varying vec2 vLocal;
-  uniform float uRadius;
-  uniform vec3 uColor;
-
-  void main() {
-    float r = length(vLocal);
-    // Falloff from centerline of the ring out to the edges of the band.
-    float d = abs(r - uRadius) / 0.08;
-    float core   = 1.0 - smoothstep(0.0, 0.18, d);
-    float bloom  = 1.0 - smoothstep(0.0, 1.0,  d);
-    float alpha  = clamp(core * 0.7 + bloom * 0.22, 0.0, 1.0);
-
-    // Subtle dashing — soft sine modulation around the ring.
-    float theta = atan(vLocal.y, vLocal.x);
-    float dash  = 0.85 + 0.15 * cos(theta * 64.0);
-    alpha *= dash;
-
-    gl_FragColor = vec4(uColor, alpha);
-  }
-`
-
-/**
- * HTML pill label. Rendered in screen space via drei's `<Html>` so it stays
- * crisp at any zoom and reuses the same vocabulary as device hover labels.
- */
-function RingLabel({ label, radius }: { label: string; radius: number }) {
+function RingLabel({ radius, label }: { radius: number; label: string }) {
   return (
     <Html
       position={[radius + 0.55, 0.03, 0]}
@@ -166,9 +104,9 @@ function RingLabel({ label, radius }: { label: string; radius: number }) {
         style={{
           padding: '5px 11px',
           borderRadius: 999,
-          background: 'rgba(5, 8, 15, 0.78)',
-          border: '1px solid rgba(4, 159, 217, 0.45)',
-          color: '#e6f0fa',
+          background: 'rgba(5, 8, 15, 0.72)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          color: 'rgba(230, 240, 250, 0.85)',
           fontSize: 11,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
