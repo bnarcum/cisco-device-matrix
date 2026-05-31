@@ -10,6 +10,7 @@ import {
 import type { Category, Device, RoomSize } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
 import { SceneEnv } from '../three/SceneEnv'
+import { deviceImage } from '../data/deviceImages'
 
 interface Filter {
   roomSize?: RoomSize
@@ -129,7 +130,11 @@ export function FinderScene({
             />
             {step === 2 && isMatch && (
               <Html
-                position={[0, t.labelAbove ? d.size[1] + 0.55 : -0.3, 0]}
+                position={[
+                  0,
+                  t.labelAbove ? labelTopFor(d) : -0.3,
+                  0,
+                ]}
                 center
                 distanceFactor={9}
                 style={{ pointerEvents: 'none' }}
@@ -163,6 +168,20 @@ export function FinderScene({
   )
 }
 
+/**
+ * Vertical position for a device's label so it always sits clear of the
+ * top of either the primitive model or the photo billboard.
+ */
+function labelTopFor(d: Device): number {
+  const hasPhoto = !!deviceImage(d.id)
+  if (hasPhoto) {
+    const primitiveLong = Math.max(d.size[0], d.size[1])
+    const photoSize = Math.min(1.8, Math.max(0.7, primitiveLong * 0.9))
+    return photoSize + 0.25
+  }
+  return d.size[1] + 0.55
+}
+
 /* ───────────────────── layout ───────────────────── */
 
 interface Target {
@@ -194,17 +213,27 @@ function computeTargets(
 
   // Step 2: arrange matches in a tidy grid centered on the stage.
   if (step === 2 && matching.length > 0) {
-    const maxWidth = Math.max(
-      1.8,
-      Math.max(...matching.map((d) => d.size[0])) + 1.3,
+    // Photo billboards are ~0.7m–1.8m on their longest axis. The grid
+    // needs to allow for the full billboard width plus label gutter so
+    // adjacent devices never collide.
+    const cellSize = Math.max(
+      2.4,
+      Math.max(
+        ...matching.map((d) => {
+          const hasPhoto = !!deviceImage(d.id)
+          const primitiveLong = Math.max(d.size[0], d.size[1])
+          const photoSize = Math.min(1.8, Math.max(0.7, primitiveLong * 0.9))
+          return (hasPhoto ? photoSize : d.size[0]) + 0.9
+        }),
+      ),
     )
     const cols = Math.min(
       4,
       Math.max(1, Math.ceil(Math.sqrt(matching.length))),
     )
     const rows = Math.ceil(matching.length / cols)
-    const spacingX = maxWidth
-    const spacingZ = Math.max(1.7, maxWidth * 0.95)
+    const spacingX = cellSize
+    const spacingZ = cellSize * 0.95
 
     matching.forEach((d, i) => {
       const col = i % cols

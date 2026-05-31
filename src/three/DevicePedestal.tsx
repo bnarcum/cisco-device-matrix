@@ -4,6 +4,8 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Device } from '../data/cisco'
 import { DeviceModel } from './DeviceModel'
+import { PhotoBillboard } from './PhotoBillboard'
+import { deviceImage } from '../data/deviceImages'
 
 interface Props {
   device: Device
@@ -34,11 +36,13 @@ export function DevicePedestal({
 }: Props) {
   const group = useRef<THREE.Group>(null)
   const baseY = position[1]
+  const imageUrl = deviceImage(device.id)
 
   useFrame((_, dt) => {
     if (!group.current) return
-    if (spin) group.current.rotation.y += dt * 0.25
-    // Subtle bob when selected
+    // Photos are billboarded — spinning the parent has no visual effect
+    // and breaks hover affordance, so only spin primitives.
+    if (spin && !imageUrl) group.current.rotation.y += dt * 0.25
     if (selected) {
       group.current.position.y =
         baseY + Math.sin(performance.now() * 0.002) * 0.025
@@ -46,6 +50,13 @@ export function DevicePedestal({
       group.current.position.y = baseY
     }
   })
+
+  // Pick a billboard size scaled to the device's natural footprint so
+  // small things (earbuds) don't dwarf big things (boards).
+  const targetSize = Math.max(
+    0.7,
+    Math.min(1.8, Math.max(device.size[0], device.size[1]) * 0.9) * scale,
+  )
 
   return (
     <group
@@ -67,9 +78,39 @@ export function DevicePedestal({
         onHover?.(null)
       }}
     >
-      <group scale={scale} position={[0, device.size[1] / 2 + 0.02, 0]}>
-        <DeviceModel device={device} highlighted={selected} />
-      </group>
+      {imageUrl ? (
+        <>
+          {/* Invisible click target sized to the billboard's footprint */}
+          <mesh position={[0, targetSize / 2, 0]} visible={false}>
+            <boxGeometry args={[targetSize, targetSize, 0.3]} />
+            <meshBasicMaterial />
+          </mesh>
+          <group position={[0, targetSize / 2, 0]}>
+            <PhotoBillboard
+              url={imageUrl}
+              targetSize={targetSize}
+              selected={selected}
+            />
+          </group>
+          {/* Subtle shadow projected on the pedestal disc */}
+          <mesh
+            position={[0, 0.003, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <circleGeometry args={[targetSize * 0.3, 32]} />
+            <meshBasicMaterial
+              color="#000"
+              transparent
+              opacity={0.18}
+              depthWrite={false}
+            />
+          </mesh>
+        </>
+      ) : (
+        <group scale={scale} position={[0, device.size[1] / 2 + 0.02, 0]}>
+          <DeviceModel device={device} highlighted={selected} />
+        </group>
+      )}
       {/* Pedestal disc */}
       <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.36, 0.4, 48]} />
@@ -81,7 +122,11 @@ export function DevicePedestal({
       </mesh>
       {showLabel && (
         <Html
-          position={[0, device.size[1] + 0.35, 0]}
+          position={[
+            0,
+            (imageUrl ? targetSize : device.size[1]) + 0.35,
+            0,
+          ]}
           center
           distanceFactor={6}
           zIndexRange={[1, 0]}

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Device } from '../data/cisco'
 import { CATEGORY_LABELS, ROOM_SIZE_LABELS } from '../data/cisco'
+import { deviceImage } from '../data/deviceImages'
 
 interface Props {
   device: Device | null
@@ -48,6 +49,12 @@ export function DeviceDrawer({
               </button>
             </header>
             <p className="tagline">{device.tagline}</p>
+
+            {deviceImage(device.id) && (
+              <div className="drawer-photo">
+                <img src={deviceImage(device.id)} alt={device.name} />
+              </div>
+            )}
 
             {device.price !== undefined && (
               <span className="price-pill">
@@ -148,10 +155,18 @@ export function DeviceDrawer({
                 lineHeight: 1.5,
               }}
             >
-              Specifications adapted from Cisco’s publicly published
-              Collaboration Device Product Matrix (Feb 2026). This site is
-              unaffiliated with Cisco and uses stylized representations of
-              the devices.
+              Photos and specifications adapted from Cisco’s publicly
+              published{' '}
+              <a
+                href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
+                target="_blank"
+                rel="noreferrer noopener"
+                style={{ color: 'var(--brand-1)' }}
+              >
+                Collaboration Device Product Matrix
+              </a>
+              . This site is unaffiliated with Cisco; photos remain the
+              property of their respective owners.
             </p>
           </motion.aside>
         </>

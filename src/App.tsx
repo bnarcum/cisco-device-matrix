@@ -14,7 +14,7 @@ type Mode = 'showroom' | 'finder'
 const MAX_COMPARE = 3
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>('showroom')
+  const [mode, setMode] = useState<Mode>('finder')
   const [selected, setSelected] = useState<Device | null>(null)
   const [filter, setFilter] = useState<Category | 'all'>('all')
   const [compare, setCompare] = useState<Device[]>([])
@@ -178,6 +178,17 @@ function Legend({ mode }: { mode: Mode }) {
         <span className="swatch" style={{ background: '#f2efe9' }} />
         <span>First Light finish</span>
       </div>
+      <p className="legend-credit">
+        Product photos &amp; specs from the public Cisco{' '}
+        <a
+          href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Collaboration Device Product Matrix
+        </a>
+        . Not affiliated with Cisco.
+      </p>
     </div>
   )
 }
