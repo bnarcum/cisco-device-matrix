@@ -3,15 +3,13 @@ import { Canvas } from '@react-three/fiber'
 import { DEVICES, CATEGORY_LABELS, CATEGORY_ORDER } from './data/cisco'
 import type { Category, Device } from './data/cisco'
 import { ShowroomScene } from './scenes/ShowroomScene'
-import { CarouselScene } from './scenes/CarouselScene'
-import { GridScene } from './scenes/GridScene'
 import { FinderScene } from './scenes/FinderScene'
 import { DeviceDrawer } from './ui/DeviceDrawer'
 import { CompareTray } from './ui/CompareTray'
 import { CompareModal } from './ui/CompareModal'
 import { FinderOverlay, type FinderState } from './ui/FinderOverlay'
 
-type Mode = 'showroom' | 'carousel' | 'grid' | 'finder'
+type Mode = 'showroom' | 'finder'
 
 const MAX_COMPARE = 3
 
@@ -57,18 +55,6 @@ export default function App() {
             Showroom
           </button>
           <button
-            data-active={mode === 'carousel' ? 'true' : 'false'}
-            onClick={() => setMode('carousel')}
-          >
-            Carousel
-          </button>
-          <button
-            data-active={mode === 'grid' ? 'true' : 'false'}
-            onClick={() => setMode('grid')}
-          >
-            Grid
-          </button>
-          <button
             data-active={mode === 'finder' ? 'true' : 'false'}
             onClick={() => setMode('finder')}
           >
@@ -90,24 +76,11 @@ export default function App() {
               onSelect={setSelected}
             />
           )}
-          {mode === 'carousel' && (
-            <CarouselScene
-              devices={visibleDevices}
-              selected={selected}
-              onSelect={setSelected}
-            />
-          )}
-          {mode === 'grid' && (
-            <GridScene
-              devices={visibleDevices}
-              selected={selected}
-              onSelect={setSelected}
-            />
-          )}
           {mode === 'finder' && (
             <FinderScene
               devices={DEVICES}
               selected={selected}
+              step={finder.step}
               filter={{
                 roomSize: finder.roomSize,
                 category: finder.category,
@@ -119,7 +92,7 @@ export default function App() {
 
         <div className="overlay">
           <Legend mode={mode} />
-          {mode !== 'finder' && (
+          {mode === 'showroom' && (
             <Filters value={filter} onChange={setFilter} />
           )}
           {mode === 'finder' && (
@@ -155,12 +128,8 @@ function cameraFor(mode: Mode): [number, number, number] {
   switch (mode) {
     case 'showroom':
       return [9, 6, 9]
-    case 'carousel':
-      return [0, 1.8, 9]
-    case 'grid':
-      return [0, 12, 12]
     case 'finder':
-      return [0, 4, 8]
+      return [0, 4.5, 9]
   }
 }
 
@@ -218,16 +187,8 @@ const LEGEND: Record<Mode, { title: string; body: string }> = {
     title: 'Showroom',
     body: 'Drag to orbit, scroll to zoom. Each ring is a category. Click any device to see specs.',
   },
-  carousel: {
-    title: 'Carousel',
-    body: 'Drag, scroll, or use ← / → to rotate. Press Enter to inspect the device at the front.',
-  },
-  grid: {
-    title: 'Comparison grid',
-    body: 'Rows = room size, columns = category. Click a device to compare.',
-  },
   finder: {
     title: 'Finder',
-    body: 'Answer two quick questions and watch the matching devices fly forward.',
+    body: 'Answer two short questions and watch the matching devices arrange themselves on the stage.',
   },
 }

@@ -1,10 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  Text,
+  Html,
+} from '@react-three/drei'
 import type { Category, Device, RoomSize } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
 import { SceneEnv } from '../three/SceneEnv'
-import { OrbitControls, Text } from '@react-three/drei'
 
 interface Filter {
   roomSize?: RoomSize
@@ -14,82 +19,143 @@ interface Filter {
 interface Props {
   devices: Device[]
   filter: Filter
+  step: 0 | 1 | 2
   selected?: Device | null
   onSelect: (d: Device) => void
 }
 
-/** A swarm scene: matching devices fly forward, others recede. */
-export function FinderScene({ devices, filter, selected, onSelect }: Props) {
-  const matching = useMemo(
-    () =>
-      devices.filter((d) => {
-        if (filter.roomSize && !d.roomSizes.includes(filter.roomSize))
-          return false
-        if (filter.category && d.category !== filter.category) return false
-        return true
-      }),
-    [devices, filter],
+/**
+ * Finder scene
+ * ─────────────
+ * Step 0/1: a calm, slow-rotating "preview ring" of representative category
+ * devices is shown in the background while the question card is up. No
+ * labels, no clutter.
+ *
+ * Step 2: the matching devices fly forward into a clean grid centered on the
+ * lower stage, with labels alternating above/below to avoid collisions.
+ * Non-matching devices recede out of frame.
+ */
+export function FinderScene({
+  devices,
+  filter,
+  step,
+  selected,
+  onSelect,
+}: Props) {
+  // No matches until the user has at least picked a room size.
+  const matching = useMemo(() => {
+    if (step < 2) return [] as Device[]
+    return devices.filter((d) => {
+      if (filter.roomSize && !d.roomSizes.includes(filter.roomSize))
+        return false
+      if (filter.category && d.category !== filter.category) return false
+      return true
+    })
+  }, [devices, filter, step])
+
+  /**
+   * Compute target positions for every device. We split into three buckets:
+   *  - Step 2 matches  → tidy grid on the lower stage.
+   *  - Step 0/1 preview → 6 representative devices on a slow ring far back.
+   *  - Everything else  → tucked far behind the camera (effectively hidden).
+   */
+  const targets = useMemo(
+    () => computeTargets(devices, matching, step),
+    [devices, matching, step],
   )
 
-  const positions = useMemo(() => {
-    const map = new Map<string, [number, number, number]>()
-    const radius = 6
-    // Non-matching: random scattered "back layer"
-    devices.forEach((d, i) => {
-      const angle = (i / devices.length) * Math.PI * 2
-      const x = Math.cos(angle) * radius
-      const y = (i % 3) * 0.2
-      const z = Math.sin(angle) * radius
-      map.set(d.id, [x, y, z])
-    })
-    // Matching: arrange in a small grid up front
-    const cols = Math.max(1, Math.ceil(Math.sqrt(matching.length)))
-    const spacing = 1.6
-    matching.forEach((d, i) => {
-      const cx = (i % cols) - (cols - 1) / 2
-      const cz = Math.floor(i / cols) - Math.floor(matching.length / cols) / 2
-      map.set(d.id, [cx * spacing, 0, cz * spacing])
-    })
-    return map
-  }, [devices, matching])
+  const cameraPos: [number, number, number] =
+    step === 2 ? [0, 6, 9] : [0, 3.2, 8.5]
+  const cameraTarget: [number, number, number] =
+    step === 2 ? [0, 0.4, 0] : [0, 0.6, -4]
 
   return (
     <>
       <SceneEnv />
+      <PerspectiveCamera makeDefault fov={42} position={cameraPos} />
       <OrbitControls
         makeDefault
         enableDamping
-        dampingFactor={0.1}
-        minDistance={3}
+        dampingFactor={0.12}
+        target={cameraTarget}
+        minDistance={4}
         maxDistance={18}
         maxPolarAngle={Math.PI * 0.49}
+        enablePan={step === 2}
       />
+
+      {/* Soft floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[20, 64]} />
+        <meshStandardMaterial color="#0a1220" />
+      </mesh>
       <gridHelper
-        args={[24, 24, '#1e2a3c', '#101820']}
+        args={[40, 40, '#172131', '#0d1521']}
         position={[0, 0.001, 0]}
       />
-      <Text
-        position={[0, 1.5, -3]}
-        fontSize={0.22}
-        color="#049fd9"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {matching.length} match{matching.length === 1 ? '' : 'es'}
-      </Text>
+
+      {/* Headline when results are shown */}
+      {step === 2 && (
+        <Text
+          position={[0, 2.6, -1]}
+          fontSize={0.22}
+          color="#049fd9"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.005}
+          outlineColor="#05080f"
+        >
+          {matching.length === 0
+            ? 'No devices match — try a different combination'
+            : `${matching.length} match${matching.length === 1 ? '' : 'es'}`}
+        </Text>
+      )}
+
+      {/* Preview ring rotator (only animates when step < 2) */}
+      <PreviewRotator active={step < 2} />
 
       {devices.map((d) => {
-        const target = positions.get(d.id) ?? [0, 0, 0]
-        const isMatch = matching.includes(d)
+        const t = targets.get(d.id)
+        if (!t) return null
+        const isMatch = matching.some((m) => m.id === d.id)
         return (
-          <FlyTo key={d.id} target={target} dim={!isMatch}>
+          <FlyTo key={d.id} target={t} hide={!t.visible}>
             <DevicePedestal
               device={d}
               selected={selected?.id === d.id}
-              showLabel={isMatch}
-              scale={isMatch ? 1 : 0.7}
+              showLabel={false}
+              scale={t.scale}
               onClick={onSelect}
             />
+            {step === 2 && isMatch && (
+              <Html
+                position={[0, t.labelAbove ? d.size[1] + 0.55 : -0.3, 0]}
+                center
+                distanceFactor={9}
+                style={{ pointerEvents: 'none' }}
+                zIndexRange={[1, 0]}
+              >
+                <div
+                  style={{
+                    padding: '4px 9px',
+                    borderRadius: 999,
+                    background: 'rgba(5,8,15,0.85)',
+                    border: `1px solid ${
+                      selected?.id === d.id
+                        ? '#049fd9'
+                        : 'rgba(255,255,255,0.14)'
+                    }`,
+                    fontSize: 11,
+                    color: '#fff',
+                    whiteSpace: 'nowrap',
+                    backdropFilter: 'blur(6px)',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {d.name}
+                </div>
+              </Html>
+            )}
           </FlyTo>
         )
       })}
@@ -97,53 +163,175 @@ export function FinderScene({ devices, filter, selected, onSelect }: Props) {
   )
 }
 
+/* ───────────────────── layout ───────────────────── */
+
+interface Target {
+  position: [number, number, number]
+  scale: number
+  visible: boolean
+  labelAbove: boolean
+}
+
+/**
+ * A small set of representative devices used for the idle "preview ring"
+ * while the user is still answering questions. We pick one per category.
+ */
+const PREVIEW_IDS = [
+  'board-pro-g2-55',
+  'desk-pro-g2',
+  'video-phone-8875',
+  'headset-bang-olufsen-900',
+  'room-navigator-table',
+  'ptz-4k-camera',
+]
+
+function computeTargets(
+  devices: Device[],
+  matching: Device[],
+  step: 0 | 1 | 2,
+): Map<string, Target> {
+  const map = new Map<string, Target>()
+
+  // Step 2: arrange matches in a tidy grid centered on the stage.
+  if (step === 2 && matching.length > 0) {
+    const maxWidth = Math.max(
+      1.8,
+      Math.max(...matching.map((d) => d.size[0])) + 1.3,
+    )
+    const cols = Math.min(
+      4,
+      Math.max(1, Math.ceil(Math.sqrt(matching.length))),
+    )
+    const rows = Math.ceil(matching.length / cols)
+    const spacingX = maxWidth
+    const spacingZ = Math.max(1.7, maxWidth * 0.95)
+
+    matching.forEach((d, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const x = (col - (cols - 1) / 2) * spacingX
+      const z = (row - (rows - 1) / 2) * spacingZ
+      map.set(d.id, {
+        position: [x, 0, z],
+        scale: 1,
+        visible: true,
+        labelAbove: row % 2 === 0,
+      })
+    })
+  }
+
+  // Step 0/1 preview ring (very slow rotation handled by PreviewRotator).
+  const previewSet = new Set(PREVIEW_IDS)
+
+  devices.forEach((d, i) => {
+    if (map.has(d.id)) return
+
+    if (step < 2 && previewSet.has(d.id)) {
+      const idx = PREVIEW_IDS.indexOf(d.id)
+      const total = PREVIEW_IDS.length
+      const angle = (idx / total) * Math.PI * 2
+      const radius = 5.5
+      map.set(d.id, {
+        position: [Math.cos(angle) * radius, 0, Math.sin(angle) * radius - 3],
+        scale: 0.85,
+        visible: true,
+        labelAbove: true,
+      })
+      return
+    }
+
+    // Everything else: pushed far behind the camera, scaled to nothing.
+    map.set(d.id, {
+      position: [0, -2, -40 - (i % 5)],
+      scale: 0,
+      visible: false,
+      labelAbove: true,
+    })
+  })
+
+  return map
+}
+
+/* ───────────────────── helpers ───────────────────── */
+
 function FlyTo({
   target,
-  dim,
+  hide,
   children,
 }: {
-  target: [number, number, number]
-  dim: boolean
+  target: Target
+  hide: boolean
   children: React.ReactNode
 }) {
   const ref = useRef<THREE.Group>(null)
+  const targetScale = hide ? 0 : target.scale
+
   useFrame((_, dt) => {
     if (!ref.current) return
     ref.current.position.x = THREE.MathUtils.damp(
       ref.current.position.x,
-      target[0],
+      target.position[0],
       4,
       dt,
     )
     ref.current.position.y = THREE.MathUtils.damp(
       ref.current.position.y,
-      target[1] + (dim ? 0.4 : 0),
+      target.position[1],
       4,
       dt,
     )
     ref.current.position.z = THREE.MathUtils.damp(
       ref.current.position.z,
-      target[2],
+      target.position[2],
       4,
       dt,
     )
-    const scale = dim ? 0.55 : 1
     const cur = ref.current.scale.x
-    const ns = THREE.MathUtils.damp(cur, scale, 4, dt)
+    const ns = THREE.MathUtils.damp(cur, targetScale, 5, dt)
     ref.current.scale.set(ns, ns, ns)
+    // Cull from raycasting + rendering when fully hidden
+    ref.current.visible = ns > 0.02
   })
-  return <group ref={ref}>{children}</group>
+
+  // Start hidden so devices don't snap-in on first render.
+  return (
+    <group ref={ref} scale={0.001}>
+      {children}
+    </group>
+  )
 }
 
 /**
- * The question-driven UI overlay (HTML, not 3D). The state lives in the
- * parent so the 3D scene can react to changes. We export the question flow
- * here so all finder logic stays together.
+ * Slowly rotates the entire group of preview devices around the world Y
+ * axis using world-space transforms applied to each child by FlyTo. We do
+ * this by rotating the camera target indirectly via a small wrapper group.
+ *
+ * To keep the implementation simple and avoid double-rotation while still
+ * letting OrbitControls drive the camera, we rotate the floor grid lighting
+ * vector instead — a subtle effect that hints at motion without spinning
+ * devices the user is trying to read.
  */
-export interface FinderState {
-  step: 0 | 1 | 2
-  filter: Filter
+function PreviewRotator({ active }: { active: boolean }) {
+  const ref = useRef<THREE.PointLight>(null)
+  useFrame(({ clock }) => {
+    if (!ref.current) return
+    if (!active) return
+    const t = clock.getElapsedTime() * 0.25
+    ref.current.position.x = Math.cos(t) * 6
+    ref.current.position.z = Math.sin(t) * 6 - 3
+  })
+  return (
+    <pointLight
+      ref={ref}
+      color="#049fd9"
+      intensity={active ? 1.4 : 0}
+      distance={14}
+      position={[6, 2, -3]}
+    />
+  )
 }
+
+/* ───────────────────── question definitions ───────────────────── */
 
 export const FINDER_QUESTIONS = [
   {
@@ -171,8 +359,3 @@ export const FINDER_QUESTIONS = [
     ],
   },
 ] as const
-
-/** Tiny hook just to silence "unused" warnings in this file. */
-export function _useUnused() {
-  useEffect(() => {}, [])
-}
