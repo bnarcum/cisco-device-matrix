@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { Html, OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
 import type { Device } from '../data/cisco'
 import { CATEGORY_ORDER, CATEGORY_LABELS } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
 import { SceneEnv } from '../three/SceneEnv'
+import { ShowroomFloor } from '../three/ShowroomFloor'
 
 interface Props {
   devices: Device[]
@@ -30,17 +32,9 @@ export function ShowroomScene({ devices, selected, onSelect }: Props) {
         maxDistance={20}
         maxPolarAngle={Math.PI * 0.49}
       />
-      {/* Floor grid */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[14, 64]} />
-        <meshStandardMaterial color="#0a1220" roughness={1} />
-      </mesh>
-      <gridHelper
-        args={[28, 28, '#1e2a3c', '#101820']}
-        position={[0, 0.001, 0]}
-      />
 
-      {/* Category labels as floor text rings */}
+      <ShowroomFloor />
+
       {layout.rings.map((ring) => (
         <CategoryRing
           key={ring.category}
@@ -49,7 +43,6 @@ export function ShowroomScene({ devices, selected, onSelect }: Props) {
         />
       ))}
 
-      {/* Devices */}
       {layout.placements.map((p) => (
         <DevicePedestal
           key={p.device.id}
@@ -94,35 +87,99 @@ function layoutByCategory(devices: Device[]) {
   return { rings, placements }
 }
 
+/**
+ * Track-style ring with a gradient glow falloff (built as a custom shader on
+ * a thin ring geometry), plus an HTML label pill that stays screen-sharp.
+ */
 function CategoryRing({ radius, label }: { radius: number; label: string }) {
+  const uniforms = useMemo(
+    () => ({
+      uRadius: { value: radius },
+      uColor: { value: new THREE.Color('#049fd9') },
+    }),
+    [radius],
+  )
+
   return (
-    <group position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh>
-        <ringGeometry args={[radius - 0.01, radius + 0.01, 96]} />
-        <meshBasicMaterial color="#1e2a3c" />
-      </mesh>
-      <mesh position={[radius + 0.55, 0, 0]}>
-        <planeGeometry args={[1.1, 0.18]} />
-        <meshBasicMaterial color="#049FD9" transparent opacity={0.0} />
+    <group position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh renderOrder={2}>
+        <ringGeometry args={[radius - 0.08, radius + 0.08, 192]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          uniforms={uniforms}
+          vertexShader={ringVert}
+          fragmentShader={ringFrag}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       <RingLabel label={label} radius={radius} />
     </group>
   )
 }
 
-import { Text } from '@react-three/drei'
+const ringVert = /* glsl */ `
+  varying vec2 vLocal;
+  void main() {
+    vLocal = position.xy;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+const ringFrag = /* glsl */ `
+  precision highp float;
+  varying vec2 vLocal;
+  uniform float uRadius;
+  uniform vec3 uColor;
+
+  void main() {
+    float r = length(vLocal);
+    // Falloff from centerline of the ring out to the edges of the band.
+    float d = abs(r - uRadius) / 0.08;
+    float core   = 1.0 - smoothstep(0.0, 0.18, d);
+    float bloom  = 1.0 - smoothstep(0.0, 1.0,  d);
+    float alpha  = clamp(core * 0.7 + bloom * 0.22, 0.0, 1.0);
+
+    // Subtle dashing — soft sine modulation around the ring.
+    float theta = atan(vLocal.y, vLocal.x);
+    float dash  = 0.85 + 0.15 * cos(theta * 64.0);
+    alpha *= dash;
+
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
+
+/**
+ * HTML pill label. Rendered in screen space via drei's `<Html>` so it stays
+ * crisp at any zoom and reuses the same vocabulary as device hover labels.
+ */
 function RingLabel({ label, radius }: { label: string; radius: number }) {
   return (
-    <Text
-      position={[radius + 0.7, 0, 0]}
-      fontSize={0.18}
-      color="#c4d6ed"
-      anchorX="left"
-      anchorY="middle"
-      outlineWidth={0.005}
-      outlineColor="#05080f"
+    <Html
+      position={[radius + 0.55, 0.03, 0]}
+      center
+      distanceFactor={9}
+      style={{ pointerEvents: 'none' }}
+      zIndexRange={[1, 0]}
     >
-      {label}
-    </Text>
+      <div
+        style={{
+          padding: '5px 11px',
+          borderRadius: 999,
+          background: 'rgba(5, 8, 15, 0.78)',
+          border: '1px solid rgba(4, 159, 217, 0.45)',
+          color: '#e6f0fa',
+          fontSize: 11,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          fontWeight: 600,
+          backdropFilter: 'blur(8px)',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+        }}
+      >
+        {label}
+      </div>
+    </Html>
   )
 }

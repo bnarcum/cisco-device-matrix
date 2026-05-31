@@ -14,8 +14,13 @@ function img(hash: string): string {
 }
 
 export const DEVICE_IMAGES: Record<string, string> = {
-  // Boards & integrators (pages 3–5)
-  'board-pro-g2-55': img('ec55e6e4e1'),
+  // Boards & integrators (pages 3–5).
+  // The brochure only contains two Board Pro G2 hero shots: a 3/4-angle
+  // wall-mount that looks tilted once the page background is removed,
+  // and a clean head-on floor-stand shot. We use the latter for both
+  // sizes — the billboards still scale to the device's `size` entry, so
+  // the 75" reads visibly larger than the 55".
+  'board-pro-g2-55': img('7a4fbdb9f3'),
   'board-pro-g2-75': img('7a4fbdb9f3'),
   'room-kit-eqx': img('e7c7a7391f'),
   'room-bar-byod': img('4519aeafbe'),
