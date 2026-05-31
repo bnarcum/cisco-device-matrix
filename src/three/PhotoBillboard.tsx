@@ -98,11 +98,17 @@ export function PhotoBillboard({
       )}
       <mesh>
         <planeGeometry args={[planeW, planeH]} />
+        {/* alphaTest=0.5 + depthWrite=true means the opaque body of the
+            device writes into the depth buffer, so things on the floor
+            below (e.g. category rings) get correctly occluded by the
+            actual silhouette of the product instead of the bounding
+            plane. The soft anti-aliased rim is still discarded by the
+            alpha test, so it doesn't introduce halo artifacts. */}
         <meshBasicMaterial
           map={texture}
           transparent
-          alphaTest={0.08}
-          depthWrite={false}
+          alphaTest={0.5}
+          depthWrite
           toneMapped={false}
           side={THREE.DoubleSide}
         />

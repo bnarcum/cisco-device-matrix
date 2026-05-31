@@ -104,7 +104,10 @@ function CategoryRing({ radius, label }: { radius: number; label: string }) {
 
   return (
     <group position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh renderOrder={2}>
+      {/* renderOrder=-1 forces the ring into the floor pass so devices and
+          their billboards always paint on top of it, even where the photo
+          alpha is too soft to write depth on its own. */}
+      <mesh renderOrder={-1}>
         <ringGeometry args={[radius - 0.04, radius + 0.04, 192]} />
         <shaderMaterial
           transparent
