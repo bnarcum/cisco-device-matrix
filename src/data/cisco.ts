@@ -1,0 +1,796 @@
+/**
+ * Cisco brand palette — sourced from publicly documented brand color references.
+ * Used here only for editorial/styling of an unaffiliated visualization of
+ * publicly published product matrix data.
+ */
+export const CISCO = {
+  primary: '#049FD9',
+  indigo: '#004BAF',
+  ocean: '#097DBC',
+  sky: '#C4D6ED',
+  mist: '#E8EBF1',
+  graphite: '#58585B',
+  steel: '#9E9EA2',
+  ash: '#C6C7CA',
+  carbon: '#1B1B1F',
+  firstLight: '#F2EFE9',
+  black: '#000000',
+  white: '#FFFFFF',
+} as const
+
+export type Category =
+  | 'room'
+  | 'desk'
+  | 'phone'
+  | 'headset'
+  | 'peripheral'
+  | 'camera'
+
+export type RoomSize =
+  | 'personal'
+  | 'huddle'
+  | 'small'
+  | 'medium'
+  | 'large'
+  | 'auditorium'
+  | 'mobile'
+
+/** Stylized hints used by the 3D primitive renderer. */
+export type Shape =
+  | 'board'
+  | 'video-bar'
+  | 'codec-kit'
+  | 'desk-display'
+  | 'desk-phone'
+  | 'wireless-phone'
+  | 'conference-phone'
+  | 'kem'
+  | 'headset-on-ear'
+  | 'headset-over-ear'
+  | 'headset-earbud'
+  | 'navigator'
+  | 'mic-table'
+  | 'mic-ceiling'
+  | 'camera-ptz'
+  | 'camera-bar'
+  | 'camera-puck'
+
+export interface Device {
+  id: string
+  name: string
+  category: Category
+  family: string
+  formFactor: string
+  tagline: string
+  highlights: string[]
+  useCases: string[]
+  roomSizes: RoomSize[]
+  recommendedPeople?: string
+  price?: number
+  priceNote?: string
+  display?: string
+  camera?: string
+  audio?: string
+  connectivity?: string[]
+  software?: string[]
+  colors: ('carbon' | 'first-light')[]
+  /** Approximate primary surface color hex used by the 3D renderer. */
+  surface: string
+  shape: Shape
+  /**
+   * Rough physical "size" cue (m) so the 3D layout feels proportional
+   * relative to other devices. NOT precise.
+   */
+  size: [number, number, number]
+}
+
+const C = CISCO
+
+export const DEVICES: Device[] = [
+  // ───────── Room Devices ─────────
+  {
+    id: 'board-pro-g2-55',
+    name: 'Board Pro G2 — 55"',
+    category: 'room',
+    family: 'Board',
+    formFactor: 'All-in-one collaboration board with 55" touch display',
+    tagline:
+      'AI-powered all-in-one meeting board with digital whiteboard for small-to-medium rooms.',
+    highlights: [
+      '96 MP dual camera with AI virtual lens zoom',
+      '14-element internal microphone array',
+      'Spatial stereo speaker array',
+      'Two active stylus pens',
+      'NVIDIA AI compute engine',
+    ],
+    useCases: ['Hybrid meetings', 'Whiteboarding', 'Training rooms'],
+    roomSizes: ['small', 'medium'],
+    recommendedPeople: 'Up to 12',
+    display: '55" 4K UHD IPS touch · 350 cd/m² · 1.07B colors',
+    camera: 'Dual 48 MP wide + main · 5x digital zoom (10x AI) · up to 7 m',
+    audio: '14-mic array · multi-channel spatial speakers + woofer',
+    connectivity: ['HDMI 2.0 in/out (2x out)', 'USB-C 4Kp60', 'Wi-Fi 6E', 'BT 5'],
+    software: ['RoomOS 11.15+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'board',
+    size: [1.3, 0.8, 0.06],
+  },
+  {
+    id: 'board-pro-g2-75',
+    name: 'Board Pro G2 — 75"',
+    category: 'room',
+    family: 'Board',
+    formFactor: 'All-in-one collaboration board with 75" touch display',
+    tagline:
+      'Bigger canvas for larger training rooms, classrooms and ideation spaces.',
+    highlights: [
+      '75" 4K touch canvas',
+      '96 MP dual camera with AI virtual lens zoom',
+      '14-element microphone array',
+      'Wall, floor, or wheel-stand mounts',
+    ],
+    useCases: ['Hybrid meetings', 'Whiteboarding', 'Classrooms', 'Studios'],
+    roomSizes: ['medium', 'large'],
+    recommendedPeople: 'Up to 12',
+    display: '75" 4K UHD IPS touch',
+    camera: 'Dual 48 MP wide + main · 5x digital zoom (10x AI)',
+    audio: '14-mic array · multi-channel spatial speakers + woofer',
+    connectivity: ['HDMI 2.0 in/out (2x out)', 'USB-C 4Kp60', 'Wi-Fi 6E'],
+    software: ['RoomOS 11.15+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'board',
+    size: [1.7, 1.05, 0.07],
+  },
+  {
+    id: 'room-kit-eqx',
+    name: 'Room Kit EQX',
+    category: 'room',
+    family: 'Room Kit',
+    formFactor: 'Integrated room kit with codec, quad camera, and audio system',
+    tagline:
+      'Flagship video meeting kit with multi-lens AI camera and directional audio.',
+    highlights: [
+      '80 MP quad-lens camera system',
+      'Cisco Codec EQ with NVIDIA AI',
+      'Dual external display support',
+      'Multi-channel speaker array + bass module',
+      'AES67 IP audio support',
+    ],
+    useCases: ['Medium-to-large meeting rooms', 'Boardrooms'],
+    roomSizes: ['medium', 'large'],
+    recommendedPeople: 'Up to 16',
+    display: 'Brings your own dual displays',
+    camera: '80 MP quad-lens · 7x zoom (1.9x optical + 4x digital) · up to 9 m',
+    audio: 'Internal mic array · multi-channel loudspeakers + bass module',
+    connectivity: ['3x HDMI 1.4b in / 3x HDMI 2.0 out', 'USB-C', '4x PoE++', 'Wi-Fi 6E'],
+    software: ['RoomOS 11.9+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'codec-kit',
+    size: [1.4, 0.55, 0.18],
+  },
+  {
+    id: 'room-bar',
+    name: 'Room Bar',
+    category: 'room',
+    family: 'Room Bar',
+    formFactor: 'Integrated video bar with built-in camera, mics and speakers',
+    tagline:
+      'Compact AI video bar for huddle rooms and small workspaces.',
+    highlights: [
+      '12 MP camera, 120° FoV',
+      '4-element microphone array',
+      'Dual stereo spatial speakers',
+      'Triple-screen support (with EQ codec sibling)',
+    ],
+    useCases: ['Huddle rooms', 'Small workspaces'],
+    roomSizes: ['huddle', 'small'],
+    recommendedPeople: 'Up to 6',
+    camera: '12 MP · 5x digital zoom · 120° FoV',
+    audio: '4-mic array · dual stereo spatial speakers',
+    connectivity: ['HDMI in/out', 'USB-C 4Kp30', 'Wi-Fi 6/6E', 'BT 5'],
+    software: ['RoomOS 11+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'video-bar',
+    size: [0.9, 0.08, 0.09],
+  },
+  {
+    id: 'room-bar-pro',
+    name: 'Room Bar Pro',
+    category: 'room',
+    family: 'Room Bar',
+    formFactor: 'Pro video bar with dual-lens camera and 16-mic array',
+    tagline:
+      'Dual-lens precision for picture-perfect meetings in mid-sized spaces.',
+    highlights: [
+      '96 MP dual-lens camera with AI virtual lens',
+      '16-element microphone array',
+      'Triple-screen support',
+      'Built-in NVIDIA AI engine',
+      'BYOD via single USB-C',
+    ],
+    useCases: ['Small-to-medium meeting rooms'],
+    roomSizes: ['small', 'medium'],
+    recommendedPeople: 'Up to 8',
+    price: 8295,
+    priceNote: 'USD CSRP',
+    camera: 'Dual 48 MP lenses · 5x digital (10x AI) · motorized tilt',
+    audio: '16-mic array · 3-channel stereo spatial speakers',
+    connectivity: ['HDMI in/out', 'USB-C 4Kp60', 'Wi-Fi 6E', 'BT 5'],
+    software: ['RoomOS 11+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'video-bar',
+    size: [1.1, 0.1, 0.1],
+  },
+  {
+    id: 'room-bar-byod',
+    name: 'Room Bar BYOD',
+    category: 'room',
+    family: 'Room Bar',
+    formFactor: 'BYOD video bar — connects via HDMI + USB-C',
+    tagline:
+      'Cost-efficient BYOD video bar with high-quality camera, mics and speakers.',
+    highlights: [
+      'Works with any meeting platform',
+      'Single HDMI to monitor, single USB-C to laptop',
+      'Control Hub managed when registered',
+      'Easy upgrade path to native Room Bar',
+    ],
+    useCases: ['Huddle rooms', 'Focus rooms', 'BYOD spaces'],
+    roomSizes: ['huddle', 'small'],
+    recommendedPeople: 'Up to 6',
+    camera: 'High quality with AI noise removal',
+    audio: 'Built-in mics and speakers',
+    connectivity: ['HDMI out', 'USB-C to laptop'],
+    software: ['BYOD — any meeting platform'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'video-bar',
+    size: [0.85, 0.075, 0.085],
+  },
+  {
+    id: 'room-kit-eq',
+    name: 'Room Kit EQ',
+    category: 'room',
+    family: 'Room Kit',
+    formFactor: 'Modular room kit with Codec EQ, Quad Camera, touch controller',
+    tagline:
+      'Modular video kit for medium-to-large rooms, training rooms, auditoriums.',
+    highlights: [
+      'Standalone Codec EQ with NVIDIA AI',
+      'Quad Camera 80 MP with multi-lens framing',
+      'Triple-screen support',
+      'AES67, multi-mic ecosystem',
+    ],
+    useCases: ['Medium-to-large rooms', 'Training rooms', 'Auditoriums'],
+    roomSizes: ['medium', 'large', 'auditorium'],
+    recommendedPeople: 'Up to 16',
+    camera: '80 MP quad-lens · 7x zoom',
+    audio: 'External mics required · 5-point speaker array',
+    connectivity: ['3x HDMI in / 3x HDMI out', 'USB-C', '4x PoE++ AV-over-IP'],
+    software: ['RoomOS 11+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'codec-kit',
+    size: [1.3, 0.5, 0.16],
+  },
+  {
+    id: 'room-kit-pro-g2',
+    name: 'Room Kit Pro G2',
+    category: 'room',
+    family: 'Room Kit',
+    formFactor: 'Pro AV integrator kit with codec and external camera support',
+    tagline:
+      'Cisco’s most advanced integrator-ready room platform.',
+    highlights: [
+      'High-performance Codec Pro G2',
+      'External PTZ camera support',
+      'Advanced AV-over-IP fabric',
+      'Designed for boardrooms and large rooms',
+    ],
+    useCases: ['Boardrooms', 'Large rooms', 'AV integrator builds'],
+    roomSizes: ['large', 'auditorium'],
+    recommendedPeople: '12+',
+    connectivity: ['HDMI in/out', 'USB-C', 'AV-over-IP', 'Wi-Fi 6E'],
+    software: ['RoomOS 11+', 'Microsoft Teams Rooms on Android'],
+    colors: ['carbon'],
+    surface: C.carbon,
+    shape: 'codec-kit',
+    size: [0.45, 0.06, 0.4],
+  },
+
+  // ───────── Desk Series ─────────
+  {
+    id: 'desk',
+    name: 'Desk',
+    category: 'desk',
+    family: 'Desk',
+    formFactor: '24" integrated desktop collaboration device',
+    tagline:
+      'All-in-one personal meeting device for home, office, or shared desk.',
+    highlights: [
+      '24" 1080p anti-glare touch display',
+      '64° UHD camera',
+      'Mic array with directional pickup',
+      'Hot-desking',
+    ],
+    useCases: ['Desktop', 'Focus rooms'],
+    roomSizes: ['personal'],
+    recommendedPeople: '1',
+    display: '24" 1080p VA touch',
+    camera: '8 MP · 64° FoV · privacy shutter',
+    audio: 'Mic array · full-range mono speaker · AI noise removal',
+    connectivity: ['HDMI in', 'USB-C DisplayPort', 'USB-A'],
+    software: ['RoomOS 11+', 'Webex', 'Zoom (SIP)', 'Teams (CVI)'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'desk-display',
+    size: [0.57, 0.47, 0.07],
+  },
+  {
+    id: 'desk-pro-g2',
+    name: 'Desk Pro G2',
+    category: 'desk',
+    family: 'Desk',
+    formFactor: '27" 4K all-in-one collaboration device',
+    tagline:
+      'Stage for the moments that matter — dual-lens camera and 4K touch.',
+    highlights: [
+      '27" 4K touch display, DCI-P3 98%',
+      'Dual-lens camera (70° tele + 105° wide)',
+      '8-mic array up to 48 kHz',
+      'Spatial Meetings 3D ready',
+    ],
+    useCases: ['Huddle spaces', 'Focus rooms', 'Hot desks', 'Executive offices'],
+    roomSizes: ['personal', 'huddle'],
+    recommendedPeople: 'Up to 5',
+    display: '27" 4K touch · 98% DCI-P3 · 350 cd/m²',
+    camera: 'Dual 4K · 48 MP tele + 14.5 MP wide · 2x optical + 5x digital',
+    audio: '8-mic array · directional · AI noise removal',
+    connectivity: ['HDMI in/out (4Kp60)', 'USB-C DisplayPort', 'USB-A x2', '2x RJ-45'],
+    software: ['RoomOS 26+', 'Webex', 'Zoom for Cisco Rooms', 'Teams Rooms (coming)'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'desk-display',
+    size: [0.63, 0.5, 0.08],
+  },
+  {
+    id: 'desk-mini',
+    name: 'Desk Mini',
+    category: 'desk',
+    family: 'Desk',
+    formFactor: '15" portable all-in-one collaboration device',
+    tagline:
+      'Turn any small space into a productive workspace.',
+    highlights: [
+      '15" touch display',
+      '8 MP camera',
+      'Intelligent mic array',
+      'Integrated whiteboard',
+    ],
+    useCases: ['Any desk', 'Temporary workspaces'],
+    roomSizes: ['personal', 'mobile'],
+    recommendedPeople: '1',
+    display: '15" 1080p IPS touch',
+    camera: '8 MP · 64° FoV · privacy shutter',
+    audio: 'Mic array · loudspeakers · AI noise removal',
+    connectivity: ['USB-C DisplayPort', 'USB-A'],
+    software: ['RoomOS 11+', 'Webex', 'Zoom (SIP)', 'Teams (CVI)'],
+    colors: ['carbon', 'first-light'],
+    surface: C.carbon,
+    shape: 'desk-display',
+    size: [0.37, 0.41, 0.13],
+  },
+
+  // ───────── Phones (selection — representative across families) ─────────
+  {
+    id: 'video-phone-8875',
+    name: 'Video Phone 8875',
+    category: 'phone',
+    family: '8800 Series',
+    formFactor: 'IP video phone with HD camera',
+    tagline:
+      'Personal IP video phone with integrated HD camera and large color display.',
+    highlights: ['HD video', 'Large color touchscreen', 'Bluetooth & Wi-Fi'],
+    useCases: ['Executive desks', 'Knowledge workers'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'desk-phone',
+    size: [0.27, 0.21, 0.16],
+  },
+  {
+    id: 'desk-phone-9871',
+    name: 'Desk Phone 9871',
+    category: 'phone',
+    family: '9800 Series',
+    formFactor: 'Flagship IP desk phone with color touchscreen',
+    tagline:
+      'Modern IP phone with large touchscreen and AI-ready audio.',
+    highlights: ['Large color touchscreen', 'Wi-Fi 6 & Bluetooth', 'USB ports'],
+    useCases: ['Executive desks', 'Power users'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'desk-phone',
+    size: [0.26, 0.2, 0.16],
+  },
+  {
+    id: 'desk-phone-9841',
+    name: 'Desk Phone 9841',
+    category: 'phone',
+    family: '9800 Series',
+    formFactor: 'Mid-tier IP desk phone',
+    tagline: 'Mid-tier IP desk phone for everyday workers.',
+    highlights: ['Color display', 'Programmable keys'],
+    useCases: ['Knowledge workers'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'desk-phone',
+    size: [0.24, 0.18, 0.16],
+  },
+  {
+    id: 'conference-8832',
+    name: 'IP Conference Phone 8832',
+    category: 'phone',
+    family: '8800 Series',
+    formFactor: 'Premium IP conference phone',
+    tagline: 'Premium HD audio conference phone for medium-to-large rooms.',
+    highlights: ['Beamforming mic array', 'Daisy-chain expansion', 'PoE'],
+    useCases: ['Medium-large conference rooms'],
+    roomSizes: ['medium', 'large'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'conference-phone',
+    size: [0.3, 0.07, 0.3],
+  },
+  {
+    id: 'wireless-9821',
+    name: 'Wireless Phone 9821',
+    category: 'phone',
+    family: 'Wireless',
+    formFactor: 'Ruggedized Wi-Fi wireless phone',
+    tagline: 'Wireless Wi-Fi phone for mobile workers (formerly 840).',
+    highlights: ['Wi-Fi 6', '2.4" color display', 'Push-to-talk'],
+    useCases: ['Healthcare', 'Retail', 'Manufacturing'],
+    roomSizes: ['mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'wireless-phone',
+    size: [0.06, 0.16, 0.02],
+  },
+  {
+    id: 'wireless-860',
+    name: 'Wireless Phone 860',
+    category: 'phone',
+    family: 'Wireless',
+    formFactor: 'Ruggedized Wi-Fi smartphone',
+    tagline: 'Touchscreen Wi-Fi phone for frontline workers.',
+    highlights: ['4.0" touch', 'Bluetooth', 'Drop-rated'],
+    useCases: ['Hospitality', 'Frontline'],
+    roomSizes: ['mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'wireless-phone',
+    size: [0.07, 0.16, 0.02],
+  },
+  {
+    id: 'dect-6825',
+    name: '6825 DECT Phone',
+    category: 'phone',
+    family: '6800 DECT',
+    formFactor: 'DECT handset',
+    tagline: 'DECT cordless handset for SMB.',
+    highlights: ['Cordless DECT', 'Lightweight'],
+    useCases: ['Small business'],
+    roomSizes: ['mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'wireless-phone',
+    size: [0.05, 0.16, 0.02],
+  },
+
+  // ───────── Headsets ─────────
+  {
+    id: 'headset-320',
+    name: 'Headset 320 Series',
+    category: 'headset',
+    family: '320',
+    formFactor: 'On-ear USB headset',
+    tagline: 'Entry-level on-ear USB headset for everyday calls.',
+    highlights: ['USB-A or USB-C', 'In-line controls'],
+    useCases: ['Open offices', 'Contact centers'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-on-ear',
+    size: [0.18, 0.2, 0.08],
+  },
+  {
+    id: 'headset-520',
+    name: 'Headset 520 Series',
+    category: 'headset',
+    family: '520',
+    formFactor: 'On-ear USB headset',
+    tagline: 'Comfortable wired headset for daily collaboration.',
+    highlights: ['USB connectivity', 'Long-call comfort'],
+    useCases: ['Open offices'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-on-ear',
+    size: [0.18, 0.2, 0.08],
+  },
+  {
+    id: 'headset-560',
+    name: 'Headset 560 Series',
+    category: 'headset',
+    family: '560',
+    formFactor: 'Wireless DECT headset with base',
+    tagline: 'Wireless DECT headset with multi-source base.',
+    highlights: ['DECT', 'Multi-device pairing', 'Long range'],
+    useCases: ['Knowledge workers', 'Executives'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-on-ear',
+    size: [0.18, 0.2, 0.08],
+  },
+  {
+    id: 'headset-730',
+    name: 'Headset 730',
+    category: 'headset',
+    family: '700',
+    formFactor: 'Over-ear Bluetooth headset',
+    tagline: 'Premium Bluetooth ANC headset for hybrid work.',
+    highlights: ['Active noise cancellation', 'Bluetooth 5', 'Long battery'],
+    useCases: ['Hybrid work', 'Travel'],
+    roomSizes: ['personal', 'mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-over-ear',
+    size: [0.2, 0.21, 0.1],
+  },
+  {
+    id: 'headset-bang-olufsen-900',
+    name: 'Headset 900 Series — Bang & Olufsen',
+    category: 'headset',
+    family: '900',
+    formFactor: 'Premium over-ear Bluetooth headset',
+    tagline: 'Co-designed with Bang & Olufsen — premium acoustics, premium feel.',
+    highlights: ['B&O sound', 'ANC', 'Aluminum + leather build'],
+    useCases: ['Executives', 'Audiophiles'],
+    roomSizes: ['personal', 'mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-over-ear',
+    size: [0.2, 0.22, 0.1],
+  },
+  {
+    id: 'headset-950',
+    name: 'Cisco 950 Earbuds',
+    category: 'headset',
+    family: '950',
+    formFactor: 'True wireless earbuds',
+    tagline: 'True wireless earbuds for on-the-go meetings.',
+    highlights: ['Bluetooth', 'Charging case', 'Voice assistant'],
+    useCases: ['Mobile workers'],
+    roomSizes: ['mobile'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'headset-earbud',
+    size: [0.07, 0.05, 0.05],
+  },
+
+  // ───────── Peripherals ─────────
+  {
+    id: 'room-navigator-table',
+    name: 'Room Navigator — Table',
+    category: 'peripheral',
+    family: 'Navigator',
+    formFactor: 'Tabletop touch controller',
+    tagline: 'Intuitive tabletop touch controller for room devices.',
+    highlights: ['10" touch', 'PoE pairing', 'Environment sensors'],
+    useCases: ['Any meeting room'],
+    roomSizes: ['huddle', 'small', 'medium', 'large'],
+    colors: ['first-light'],
+    surface: C.firstLight,
+    shape: 'navigator',
+    size: [0.27, 0.04, 0.18],
+  },
+  {
+    id: 'room-navigator-wall',
+    name: 'Room Navigator — Wall',
+    category: 'peripheral',
+    family: 'Navigator',
+    formFactor: 'Wall-mount scheduling and room control',
+    tagline: 'At-a-glance room availability and quick booking outside the room.',
+    highlights: ['10" wall-mount', 'Booking + room control', 'Environment sensors'],
+    useCases: ['Outside conference rooms'],
+    roomSizes: ['huddle', 'small', 'medium', 'large'],
+    colors: ['first-light'],
+    surface: C.firstLight,
+    shape: 'navigator',
+    size: [0.27, 0.18, 0.025],
+  },
+  {
+    id: 'table-mic-pro',
+    name: 'Table Microphone Pro',
+    category: 'peripheral',
+    family: 'Microphones',
+    formFactor: 'AV-over-IP table conferencing microphone',
+    tagline: 'Premium IP table microphone with multi-directional capture.',
+    highlights: ['AV-over-IP', 'Multi-directional', 'Daisy-chain up to 8'],
+    useCases: ['Medium-to-large rooms'],
+    roomSizes: ['medium', 'large'],
+    colors: ['carbon', 'first-light'],
+    surface: C.firstLight,
+    shape: 'mic-table',
+    size: [0.16, 0.025, 0.16],
+  },
+  {
+    id: 'ceiling-mic-pro',
+    name: 'Ceiling Microphone Pro',
+    category: 'peripheral',
+    family: 'Microphones',
+    formFactor: 'AI adaptive beamforming ceiling microphone',
+    tagline: 'AI adaptive beamforming ceiling mic with AV-over-IP.',
+    highlights: ['Adaptive beamforming', 'AV-over-IP', 'Plug-and-play'],
+    useCases: ['Medium-to-large rooms', 'Boardrooms'],
+    roomSizes: ['medium', 'large', 'auditorium'],
+    colors: ['first-light'],
+    surface: C.firstLight,
+    shape: 'mic-ceiling',
+    size: [0.36, 0.05, 0.36],
+  },
+  {
+    id: 'table-mic',
+    name: 'Table Microphone',
+    category: 'peripheral',
+    family: 'Microphones',
+    formFactor: 'Analog table conferencing microphone',
+    tagline: 'Classic table conferencing microphone.',
+    highlights: ['Analog 3.5 mm', 'Daisy-chain'],
+    useCases: ['Conference rooms'],
+    roomSizes: ['small', 'medium'],
+    colors: ['carbon', 'first-light'],
+    surface: C.firstLight,
+    shape: 'mic-table',
+    size: [0.12, 0.022, 0.12],
+  },
+  {
+    id: 'ceiling-mic',
+    name: 'Ceiling Microphone',
+    category: 'peripheral',
+    family: 'Microphones',
+    formFactor: 'Ceiling conferencing microphone',
+    tagline: 'Cost-effective ceiling microphone for fixed installs.',
+    highlights: ['Ceiling mount', 'Wide pickup'],
+    useCases: ['Medium rooms'],
+    roomSizes: ['medium'],
+    colors: ['first-light'],
+    surface: C.firstLight,
+    shape: 'mic-ceiling',
+    size: [0.3, 0.04, 0.3],
+  },
+
+  // ───────── Cameras ─────────
+  {
+    id: 'desk-camera-1080',
+    name: 'Desk Camera 1080p',
+    category: 'camera',
+    family: 'Desk Camera',
+    formFactor: 'Personal USB webcam',
+    tagline: '1080p personal USB webcam for everyday meetings.',
+    highlights: ['1080p', 'USB plug-and-play', 'Privacy shutter'],
+    useCases: ['Personal desks'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'camera-puck',
+    size: [0.1, 0.05, 0.05],
+  },
+  {
+    id: 'desk-camera-4k',
+    name: 'Desk Camera 4K',
+    category: 'camera',
+    family: 'Desk Camera',
+    formFactor: 'Premium USB 4K webcam',
+    tagline: '4K personal webcam with AI framing and noise removal.',
+    highlights: ['4K UHD', 'AI framing', 'USB-C'],
+    useCases: ['Personal desks', 'Hybrid work'],
+    roomSizes: ['personal'],
+    colors: ['carbon'],
+    surface: C.graphite,
+    shape: 'camera-puck',
+    size: [0.11, 0.055, 0.055],
+  },
+  {
+    id: 'quad-camera',
+    name: 'Quad Camera',
+    category: 'camera',
+    family: 'Quad Camera',
+    formFactor: '80 MP multi-lens conferencing camera',
+    tagline: 'Multi-lens 80 MP conferencing camera for Room Kit EQ.',
+    highlights: ['4 sensors + AI switching', 'AES67 audio in mic ecosystem'],
+    useCases: ['Room Kit EQ rooms'],
+    roomSizes: ['medium', 'large'],
+    colors: ['carbon'],
+    surface: C.carbon,
+    shape: 'camera-bar',
+    size: [0.85, 0.1, 0.12],
+  },
+  {
+    id: 'room-vision-ptz',
+    name: 'Room Vision PTZ',
+    category: 'camera',
+    family: 'PTZ',
+    formFactor: 'AI PTZ camera with AV-over-IP',
+    tagline: 'AI PTZ camera for cinematic speaker tracking and AV-over-IP.',
+    highlights: ['12x optical + 5x digital', '81° FoV', 'AV-over-IP'],
+    useCases: ['Large rooms', 'Auditoriums'],
+    roomSizes: ['large', 'auditorium'],
+    colors: ['carbon'],
+    surface: C.carbon,
+    shape: 'camera-ptz',
+    size: [0.18, 0.22, 0.18],
+  },
+  {
+    id: 'ptz-4k-camera',
+    name: 'PTZ 4K Camera',
+    category: 'camera',
+    family: 'PTZ',
+    formFactor: '4K PTZ camera',
+    tagline: '4K PTZ camera for presenter tracking and multi-camera scenarios.',
+    highlights: ['4K', 'Wide FoV', 'AI director on RoomOS'],
+    useCases: ['Multi-camera rooms', 'Auditoriums'],
+    roomSizes: ['large', 'auditorium'],
+    colors: ['carbon'],
+    surface: C.carbon,
+    shape: 'camera-ptz',
+    size: [0.2, 0.22, 0.2],
+  },
+]
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  room: 'Room Devices',
+  desk: 'Desk Series',
+  phone: 'Phones',
+  headset: 'Headsets',
+  peripheral: 'Peripherals',
+  camera: 'Cameras',
+}
+
+export const CATEGORY_ORDER: Category[] = [
+  'room',
+  'desk',
+  'phone',
+  'headset',
+  'peripheral',
+  'camera',
+]
+
+export const ROOM_SIZE_LABELS: Record<RoomSize, string> = {
+  personal: 'Personal / desk',
+  huddle: 'Huddle',
+  small: 'Small room',
+  medium: 'Medium room',
+  large: 'Large room',
+  auditorium: 'Auditorium',
+  mobile: 'Mobile / on-the-go',
+}
+
+export const ROOM_SIZE_ORDER: RoomSize[] = [
+  'personal',
+  'mobile',
+  'huddle',
+  'small',
+  'medium',
+  'large',
+  'auditorium',
+]
