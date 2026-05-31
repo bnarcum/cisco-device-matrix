@@ -101,7 +101,8 @@ export function PhotoBillboard({
         <meshBasicMaterial
           map={texture}
           transparent
-          alphaTest={0.02}
+          alphaTest={0.08}
+          depthWrite={false}
           toneMapped={false}
           side={THREE.DoubleSide}
         />

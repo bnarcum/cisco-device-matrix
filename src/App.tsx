@@ -91,7 +91,6 @@ export default function App() {
         </Canvas>
 
         <div className="overlay">
-          <Legend mode={mode} />
           {mode === 'showroom' && (
             <Filters value={filter} onChange={setFilter} />
           )}
@@ -161,45 +160,3 @@ function Filters({
   )
 }
 
-function Legend({ mode }: { mode: Mode }) {
-  return (
-    <div className="legend" role="note">
-      <h2>{LEGEND[mode].title}</h2>
-      <p className="help">{LEGEND[mode].body}</p>
-      <div className="legend-row">
-        <span className="swatch" style={{ background: '#049fd9' }} />
-        <span>Cisco Primary · selected device</span>
-      </div>
-      <div className="legend-row">
-        <span className="swatch" style={{ background: '#1b1b1f' }} />
-        <span>Carbon Black finish</span>
-      </div>
-      <div className="legend-row">
-        <span className="swatch" style={{ background: '#f2efe9' }} />
-        <span>First Light finish</span>
-      </div>
-      <p className="legend-credit">
-        Product photos &amp; specs from the public Cisco{' '}
-        <a
-          href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Collaboration Device Product Matrix
-        </a>
-        . Not affiliated with Cisco.
-      </p>
-    </div>
-  )
-}
-
-const LEGEND: Record<Mode, { title: string; body: string }> = {
-  showroom: {
-    title: 'Showroom',
-    body: 'Drag to orbit, scroll to zoom. Each ring is a category. Click any device to see specs.',
-  },
-  finder: {
-    title: 'Finder',
-    body: 'Answer two short questions and watch the matching devices arrange themselves on the stage.',
-  },
-}
