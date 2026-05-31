@@ -14,7 +14,7 @@ type Mode = 'showroom' | 'finder'
 const MAX_COMPARE = 3
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>('finder')
+  const [mode, setMode] = useState<Mode>('showroom')
   const [selected, setSelected] = useState<Device | null>(null)
   const [filter, setFilter] = useState<Category | 'all'>('all')
   const [compare, setCompare] = useState<Device[]>([])
