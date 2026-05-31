@@ -141,7 +141,7 @@ const ringFrag = /* glsl */ `
     float d = abs(r - uRadius) / 0.04;
     float core  = 1.0 - smoothstep(0.0, 0.35, d);
     float bloom = 1.0 - smoothstep(0.0, 1.4,  d);
-    float alpha = clamp(core * 0.22 + bloom * 0.06, 0.0, 1.0);
+    float alpha = clamp(core * 0.38 + bloom * 0.12, 0.0, 1.0);
     gl_FragColor = vec4(uColor, alpha);
   }
 `
@@ -164,7 +164,7 @@ function RingLabel({ radius, label }: { radius: number; label: string }) {
           padding: '5px 11px',
           borderRadius: 999,
           background: 'rgba(5, 8, 15, 0.78)',
-          border: '1px solid rgba(4, 159, 217, 0.35)',
+          border: '1px solid rgba(4, 159, 217, 0.5)',
           color: '#e6f0fa',
           fontSize: 11,
           letterSpacing: '0.08em',
