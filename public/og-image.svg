@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="ogTitle ogDesc">
+  <title id="ogTitle">Cisco Collaboration Device Matrix  Interactive 3D</title>
+  <desc id="ogDesc">Dark Cisco-blue card titled "Collaboration Device Matrix" with the tagline "Interactive 3D · 2026 catalog" and an abstract rings + spotlight silhouette.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05080f" />
+      <stop offset="100%" stop-color="#0a1220" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="0.78" cy="0.12" r="0.55">
+      <stop offset="0%" stop-color="#049fd9" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#049fd9" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#049fd9" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glow2" cx="-0.05" cy="1.05" r="0.7">
+      <stop offset="0%" stop-color="#004baf" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#004baf" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#004baf" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#049fd9" />
+      <stop offset="100%" stop-color="#004baf" />
+    </linearGradient>
+    <radialGradient id="spot" cx="0.5" cy="0.25" r="0.65">
+      <stop offset="0%" stop-color="#049fd9" stop-opacity="0.85" />
+      <stop offset="55%" stop-color="#049fd9" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#049fd9" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="pool" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#049fd9" stop-opacity="0.55" />
+      <stop offset="60%" stop-color="#049fd9" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#049fd9" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#glow1)" />
+  <rect width="1200" height="630" fill="url(#glow2)" />
+
+  <!-- Spotlight cone & floor pool, evoking the 3D selection spotlight -->
+  <g transform="translate(880 120)">
+    <ellipse cx="0" cy="0" rx="280" ry="320" fill="url(#spot)" opacity="0.9" />
+    <ellipse cx="0" cy="320" rx="260" ry="40" fill="url(#pool)" />
+  </g>
+
+  <!-- Concentric category rings, echoing the showroom layout -->
+  <g transform="translate(880 460)" fill="none" stroke="#049fd9" stroke-opacity="0.35">
+    <ellipse cx="0" cy="0" rx="260" ry="46" stroke-width="1.5" />
+    <ellipse cx="0" cy="0" rx="200" ry="34" stroke-width="1.25" stroke-opacity="0.45" />
+    <ellipse cx="0" cy="0" rx="140" ry="22" stroke-width="1" stroke-opacity="0.55" />
+    <ellipse cx="0" cy="0" rx="80" ry="12" stroke-width="0.75" stroke-opacity="0.65" />
+  </g>
+
+  <!-- Stylized device silhouettes scattered along the rings -->
+  <g fill="#049fd9" opacity="0.85">
+    <!-- video bar / board -->
+    <rect x="780" y="438" width="200" height="24" rx="4" fill-opacity="0.55" />
+    <rect x="820" y="392" width="120" height="60" rx="6" fill-opacity="0.4" />
+    <!-- desk display -->
+    <rect x="760" y="478" width="44" height="28" rx="3" fill-opacity="0.5" />
+    <rect x="775" y="506" width="14" height="10" fill-opacity="0.5" />
+    <!-- headset puck -->
+    <circle cx="1010" cy="478" r="14" fill-opacity="0.55" />
+    <circle cx="1010" cy="478" r="6" fill="#05080f" />
+    <!-- phone -->
+    <rect x="700" y="466" width="34" height="46" rx="4" fill-opacity="0.45" />
+  </g>
+
+  <!-- Brand mark -->
+  <g transform="translate(80 96)">
+    <rect width="64" height="64" rx="14" fill="url(#brand)" />
+    <text
+      x="32"
+      y="44"
+      text-anchor="middle"
+      font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+      font-weight="800"
+      font-size="32"
+      fill="#ffffff"
+    >U</text>
+  </g>
+
+  <!-- Wordmark -->
+  <text
+    x="170"
+    y="138"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="600"
+    font-size="22"
+    letter-spacing="6"
+    fill="#c4d6ed"
+  >CISCO · WEBEX</text>
+
+  <text
+    x="80"
+    y="270"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="800"
+    font-size="78"
+    fill="#f7fafc"
+    letter-spacing="-1"
+  >Collaboration</text>
+  <text
+    x="80"
+    y="360"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="800"
+    font-size="78"
+    fill="#f7fafc"
+    letter-spacing="-1"
+  >Device Matrix</text>
+
+  <!-- Tagline -->
+  <g transform="translate(80 416)">
+    <rect width="270" height="46" rx="23" fill="#049fd9" fill-opacity="0.18" stroke="#049fd9" stroke-opacity="0.55" stroke-width="1.25" />
+    <text
+      x="135"
+      y="30"
+      text-anchor="middle"
+      font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+      font-weight="600"
+      font-size="20"
+      fill="#e6f0fa"
+      letter-spacing="0.5"
+    >Interactive 3D · 2026 catalog</text>
+  </g>
+
+  <!-- Footer URL -->
+  <text
+    x="80"
+    y="560"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="500"
+    font-size="20"
+    fill="#9eb3cf"
+    letter-spacing="2"
+  >bnarcum.github.io/cisco-device-matrix</text>
+
+  <!-- Subtle bottom hairline -->
+  <rect x="80" y="585" width="1040" height="1" fill="#ffffff" fill-opacity="0.08" />
+</svg>

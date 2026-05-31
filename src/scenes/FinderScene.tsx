@@ -12,6 +12,7 @@ import { DevicePedestal } from '../three/DevicePedestal'
 import { SceneEnv } from '../three/SceneEnv'
 import { ShowroomFloor } from '../three/ShowroomFloor'
 import { deviceImage } from '../data/deviceImages'
+import { useReducedMotion } from '../hooks/useReducedMotion'
 
 interface Filter {
   roomSize?: RoomSize
@@ -103,6 +104,34 @@ export function FinderScene({
             ? 'No devices match — try a different combination'
             : `${matching.length} match${matching.length === 1 ? '' : 'es'}`}
         </Text>
+      )}
+
+      {/* Now plan your room → Webex Designer (in-canvas CTA) */}
+      {step === 2 && matching.length > 0 && (
+        <Html
+          position={[0, 2.15, -1]}
+          center
+          distanceFactor={9}
+          zIndexRange={[2, 0]}
+          style={{ pointerEvents: 'auto' }}
+        >
+          <a
+            href="https://designer.webex.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="finder-designer-cta"
+            aria-label="Plan your room with Webex Workspace Designer (opens in a new tab)"
+          >
+            <span className="finder-designer-cta-icon" aria-hidden>
+              ⌗
+            </span>
+            <span>Now plan your room</span>
+            <span className="finder-designer-cta-arrow" aria-hidden>
+              →
+            </span>
+            <span className="finder-designer-cta-meta">Webex Designer ↗</span>
+          </a>
+        </Html>
       )}
 
       {/* Preview ring rotator (only animates when step < 2) */}
@@ -335,9 +364,16 @@ function FlyTo({
  */
 function PreviewRotator({ active }: { active: boolean }) {
   const ref = useRef<THREE.PointLight>(null)
+  const prefersReducedMotion = useReducedMotion()
   useFrame(({ clock }) => {
     if (!ref.current) return
     if (!active) return
+    if (prefersReducedMotion) {
+      // Park the light at a tasteful static angle when motion is disabled.
+      ref.current.position.x = 6
+      ref.current.position.z = -3
+      return
+    }
     const t = clock.getElapsedTime() * 0.25
     ref.current.position.x = Math.cos(t) * 6
     ref.current.position.z = Math.sin(t) * 6 - 3

@@ -1,39 +1,285 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { DEVICES, CATEGORY_LABELS, CATEGORY_ORDER } from './data/cisco'
-import type { Category, Device } from './data/cisco'
+import {
+  DEVICES,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  ROOM_SIZE_ORDER,
+} from './data/cisco'
+import type { Category, Device, RoomSize } from './data/cisco'
 import { ShowroomScene } from './scenes/ShowroomScene'
 import { FinderScene } from './scenes/FinderScene'
 import { DeviceDrawer } from './ui/DeviceDrawer'
 import { CompareTray } from './ui/CompareTray'
 import { CompareModal } from './ui/CompareModal'
 import { FinderOverlay, type FinderState } from './ui/FinderOverlay'
+import { SearchBar } from './ui/SearchBar'
+import {
+  enumArrayCodec,
+  enumCodec,
+  idArrayCodec,
+  idCodec,
+  useUrlState,
+} from './hooks/useUrlState'
 
 type Mode = 'showroom' | 'finder'
+const MODES: readonly Mode[] = ['showroom', 'finder']
 
 const MAX_COMPARE = 3
 
+/* ───────────────────── capability filter chips ───────────────────── */
+
+type Capability = 'wifi6e' | 'byod' | 'ai-camera' | 'anc-headset' | 'av-over-ip'
+
+const CAPABILITIES: readonly Capability[] = [
+  'wifi6e',
+  'byod',
+  'ai-camera',
+  'anc-headset',
+  'av-over-ip',
+]
+
+const CAPABILITY_LABELS: Record<Capability, string> = {
+  wifi6e: 'Wi-Fi 6E',
+  byod: 'BYOD',
+  'ai-camera': 'AI camera',
+  'anc-headset': 'ANC headset',
+  'av-over-ip': 'AV-over-IP',
+}
+
+function deviceMatchesCapability(d: Device, cap: Capability): boolean {
+  switch (cap) {
+    case 'wifi6e':
+      return !!d.connectivity?.some((s) => /Wi-Fi 6E/i.test(s))
+    case 'byod':
+      return (
+        /\bBYOD\b/i.test(d.tagline ?? '') ||
+        /\bBYOD\b/i.test(d.formFactor ?? '') ||
+        d.id.toLowerCase().includes('byod')
+      )
+    case 'ai-camera':
+      return (
+        !!d.highlights?.some((s) => /\bAI\b/i.test(s)) &&
+        ['room', 'desk', 'camera'].includes(d.category)
+      )
+    case 'anc-headset':
+      return (
+        d.category === 'headset' &&
+        !!d.highlights?.some((s) => /\bANC\b|noise cancell?/i.test(s))
+      )
+    case 'av-over-ip':
+      return (
+        !!d.connectivity?.some((s) => /AV-over-IP/i.test(s)) ||
+        !!d.highlights?.some((s) => /AV-over-IP/i.test(s))
+      )
+  }
+}
+
+/* ───────────────────── helpers ───────────────────── */
+
+const DEVICES_BY_ID = new Map(DEVICES.map((d) => [d.id, d]))
+
+const FILTER_VALUES: readonly (Category | 'all')[] = ['all', ...CATEGORY_ORDER]
+
 export default function App() {
-  const [mode, setMode] = useState<Mode>('showroom')
-  const [selected, setSelected] = useState<Device | null>(null)
-  const [filter, setFilter] = useState<Category | 'all'>('all')
-  const [compare, setCompare] = useState<Device[]>([])
-  const [compareOpen, setCompareOpen] = useState(false)
-  const [finder, setFinder] = useState<FinderState>({ step: 0 })
+  /* ── URL-mirrored state ───────────────────────────────────────── */
+  const [mode, setMode] = useUrlState<Mode>(
+    'view',
+    'showroom',
+    enumCodec(MODES, 'showroom'),
+  )
+  const [selectedId, setSelectedId] = useUrlState<string | null>(
+    'device',
+    null,
+    idCodec,
+  )
+  const [filter, setFilter] = useUrlState<Category | 'all'>(
+    'filter',
+    'all',
+    enumCodec(FILTER_VALUES, 'all'),
+  )
+  const [roomSize, setRoomSize] = useUrlState<RoomSize | null>(
+    'room',
+    null,
+    enumCodec(ROOM_SIZE_ORDER, null),
+  )
+  // `for` accepts a Category or the sentinel string 'any' (= step 2 with
+  // no category filter) so we can disambiguate "step 1 in progress" from
+  // "step 2 with the Anything choice".
+  const [finderForRaw, setFinderForRaw] = useUrlState<string | null>(
+    'for',
+    null,
+    enumCodec(['any', ...CATEGORY_ORDER], null),
+  )
+  const [compareIds, setCompareIds] = useUrlState<string[]>(
+    'compare',
+    [],
+    idArrayCodec,
+  )
+  const [caps, setCaps] = useUrlState<Capability[]>(
+    'caps',
+    [],
+    enumArrayCodec(CAPABILITIES),
+  )
+  const [compareOpen, setCompareOpenRaw] = useUrlState<boolean>(
+    'compareOpen',
+    false,
+    {
+      parse: (raw) => raw === '1',
+      serialize: (v) => (v ? '1' : null),
+    },
+  )
 
-  const visibleDevices = useMemo(() => {
-    if (filter === 'all') return DEVICES
-    return DEVICES.filter((d) => d.category === filter)
-  }, [filter])
-
-  const toggleCompare = useCallback((d: Device) => {
-    setCompare((prev) => {
-      const exists = prev.find((p) => p.id === d.id)
-      if (exists) return prev.filter((p) => p.id !== d.id)
-      if (prev.length >= MAX_COMPARE) return prev
-      return [...prev, d]
+  /* ── Sanitize URL inputs once on mount ────────────────────────── */
+  useEffect(() => {
+    if (selectedId !== null && !DEVICES_BY_ID.has(selectedId)) {
+      setSelectedId(null)
+    }
+    setCompareIds((prev) => {
+      const cleaned: string[] = []
+      const seen = new Set<string>()
+      for (const id of prev) {
+        if (!DEVICES_BY_ID.has(id)) continue
+        if (seen.has(id)) continue
+        seen.add(id)
+        cleaned.push(id)
+        if (cleaned.length >= MAX_COMPARE) break
+      }
+      const same =
+        cleaned.length === prev.length && cleaned.every((v, i) => prev[i] === v)
+      return same ? prev : cleaned
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /* ── Derived values ───────────────────────────────────────────── */
+  const selected: Device | null = useMemo(
+    () => (selectedId ? DEVICES_BY_ID.get(selectedId) ?? null : null),
+    [selectedId],
+  )
+
+  const compare: Device[] = useMemo(
+    () =>
+      compareIds
+        .map((id) => DEVICES_BY_ID.get(id))
+        .filter((d): d is Device => !!d),
+    [compareIds],
+  )
+
+  const finderState: FinderState = useMemo(() => {
+    if (!roomSize) return { step: 0 }
+    if (finderForRaw === null) return { step: 1, roomSize }
+    return {
+      step: 2,
+      roomSize,
+      category:
+        finderForRaw === 'any' ? undefined : (finderForRaw as Category),
+    }
+  }, [roomSize, finderForRaw])
+
+  const setFinderState = useCallback(
+    (s: FinderState) => {
+      if (s.step === 0) {
+        setRoomSize(null)
+        setFinderForRaw(null)
+      } else if (s.step === 1) {
+        setRoomSize(s.roomSize ?? null)
+        setFinderForRaw(null)
+      } else {
+        setRoomSize(s.roomSize ?? null)
+        setFinderForRaw(s.category ?? 'any')
+      }
+    },
+    [setRoomSize, setFinderForRaw],
+  )
+
+  /* ── Filtered device list (category + capability AND-combined) ─ */
+  const visibleDevices = useMemo(() => {
+    let out = filter === 'all' ? DEVICES : DEVICES.filter((d) => d.category === filter)
+    if (caps.length > 0) {
+      out = out.filter((d) => caps.every((c) => deviceMatchesCapability(d, c)))
+    }
+    return out
+  }, [filter, caps])
+
+  /* ── Selection helpers ─────────────────────────────────────────── */
+  const selectDevice = useCallback(
+    (d: Device | null) => {
+      setSelectedId(d?.id ?? null)
+    },
+    [setSelectedId],
+  )
+
+  const toggleCompare = useCallback(
+    (d: Device) => {
+      setCompareIds((prev) => {
+        const exists = prev.includes(d.id)
+        if (exists) return prev.filter((id) => id !== d.id)
+        if (prev.length >= MAX_COMPARE) return prev
+        return [...prev, d.id]
+      })
+    },
+    [setCompareIds],
+  )
+
+  const toggleCapability = useCallback(
+    (c: Capability) => {
+      setCaps((prev) =>
+        prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+      )
+    },
+    [setCaps],
+  )
+
+  const setCompareOpen = useCallback(
+    (open: boolean) => setCompareOpenRaw(open),
+    [setCompareOpenRaw],
+  )
+
+  /* ── Document title reflects the selected device ───────────────── */
+  useEffect(() => {
+    const base = 'Cisco Collaboration Device Matrix · Interactive 3D'
+    document.title = selected ? `${selected.name} · ${base}` : base
+  }, [selected])
+
+  /* ── Keyboard navigation: Esc, ArrowLeft/Right ─────────────────── */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = document.activeElement as HTMLElement | null
+      const tag = target?.tagName?.toLowerCase()
+      const editable =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        target?.isContentEditable === true
+      if (e.key === 'Escape') {
+        if (compareOpen) {
+          setCompareOpen(false)
+          e.preventDefault()
+          return
+        }
+        if (selected) {
+          selectDevice(null)
+          e.preventDefault()
+          return
+        }
+      }
+      if (editable) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      if (!selected) return
+      const peers = DEVICES.filter((d) => d.category === selected.category)
+      if (peers.length === 0) return
+      const idx = peers.findIndex((d) => d.id === selected.id)
+      if (idx < 0) return
+      const dir = e.key === 'ArrowRight' ? 1 : -1
+      const next = peers[(idx + dir + peers.length) % peers.length]
+      selectDevice(next)
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selected, selectDevice, compareOpen, setCompareOpen])
 
   return (
     <div className="app">
@@ -61,6 +307,7 @@ export default function App() {
             Finder
           </button>
         </nav>
+        <SearchBar devices={DEVICES} onSelect={(d) => selectDevice(d)} />
         <a
           className="source-link"
           href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
@@ -77,6 +324,29 @@ export default function App() {
             <span className="source-link-meta">Cisco · Webex · PDF</span>
           </span>
         </a>
+        <span
+          className="catalog-chip"
+          aria-label="Catalog edition: February 2026"
+          title="February 2026 catalog edition"
+        >
+          Feb 2026 catalog
+        </span>
+        <a
+          className="designer-link"
+          href="https://designer.webex.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Webex Workspace Designer to plan a room (opens in a new tab)"
+          title="Open Webex Workspace Designer"
+        >
+          <span className="designer-link-icon" aria-hidden>
+            ⌗
+          </span>
+          <span className="designer-link-text">
+            <span className="designer-link-label">Design a room ↗</span>
+            <span className="designer-link-meta">Webex · Workspace Designer</span>
+          </span>
+        </a>
       </header>
 
       <div className="canvas-wrap">
@@ -89,41 +359,46 @@ export default function App() {
             <ShowroomScene
               devices={visibleDevices}
               selected={selected}
-              onSelect={setSelected}
+              onSelect={(d) => selectDevice(d)}
             />
           )}
           {mode === 'finder' && (
             <FinderScene
               devices={DEVICES}
               selected={selected}
-              step={finder.step}
+              step={finderState.step}
               filter={{
-                roomSize: finder.roomSize,
-                category: finder.category,
+                roomSize: finderState.roomSize,
+                category: finderState.category,
               }}
-              onSelect={setSelected}
+              onSelect={(d) => selectDevice(d)}
             />
           )}
         </Canvas>
 
         <div className="overlay">
           {mode === 'showroom' && (
-            <Filters value={filter} onChange={setFilter} />
+            <Filters
+              value={filter}
+              onChange={setFilter}
+              caps={caps}
+              onToggleCap={toggleCapability}
+            />
           )}
           {mode === 'finder' && (
-            <FinderOverlay state={finder} setState={setFinder} />
+            <FinderOverlay state={finderState} setState={setFinderState} />
           )}
           <CompareTray
             items={compare}
             onRemove={(d) => toggleCompare(d)}
-            onOpen={(d) => setSelected(d)}
+            onOpen={(d) => selectDevice(d)}
             onCompareAll={() => setCompareOpen(true)}
           />
         </div>
 
         <DeviceDrawer
           device={selected}
-          onClose={() => setSelected(null)}
+          onClose={() => selectDevice(null)}
           inCompare={!!selected && compare.some((c) => c.id === selected.id)}
           canAddCompare={compare.length < MAX_COMPARE}
           onToggleCompare={toggleCompare}
@@ -151,28 +426,54 @@ function cameraFor(mode: Mode): [number, number, number] {
 function Filters({
   value,
   onChange,
+  caps,
+  onToggleCap,
 }: {
   value: Category | 'all'
   onChange: (c: Category | 'all') => void
+  caps: Capability[]
+  onToggleCap: (c: Capability) => void
 }) {
   return (
-    <div className="filters" role="toolbar" aria-label="Category filter">
-      <button
-        data-active={value === 'all' ? 'true' : 'false'}
-        onClick={() => onChange('all')}
-      >
-        All
-      </button>
-      {CATEGORY_ORDER.map((c) => (
+    <div className="filters" role="region" aria-label="Showroom filters">
+      <div className="filters-row" role="toolbar" aria-label="Category filter">
         <button
-          key={c}
-          data-active={value === c ? 'true' : 'false'}
-          onClick={() => onChange(c)}
+          data-active={value === 'all' ? 'true' : 'false'}
+          onClick={() => onChange('all')}
         >
-          {CATEGORY_LABELS[c]}
+          All
         </button>
-      ))}
+        {CATEGORY_ORDER.map((c) => (
+          <button
+            key={c}
+            data-active={value === c ? 'true' : 'false'}
+            onClick={() => onChange(c)}
+          >
+            {CATEGORY_LABELS[c]}
+          </button>
+        ))}
+      </div>
+      <div
+        className="filters-row filters-caps"
+        role="toolbar"
+        aria-label="Capability filter"
+      >
+        <span className="filters-caps-label">Capabilities</span>
+        {CAPABILITIES.map((c) => {
+          const active = caps.includes(c)
+          return (
+            <button
+              key={c}
+              className="cap-chip"
+              data-active={active ? 'true' : 'false'}
+              aria-pressed={active}
+              onClick={() => onToggleCap(c)}
+            >
+              {CAPABILITY_LABELS[c]}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
-

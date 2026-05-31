@@ -6,6 +6,7 @@ import type { Device } from '../data/cisco'
 import { DeviceModel } from './DeviceModel'
 import { PhotoBillboard } from './PhotoBillboard'
 import { deviceImage } from '../data/deviceImages'
+import { useReducedMotion } from '../hooks/useReducedMotion'
 
 interface Props {
   device: Device
@@ -37,13 +38,15 @@ export function DevicePedestal({
   const group = useRef<THREE.Group>(null)
   const baseY = position[1]
   const imageUrl = deviceImage(device.id)
+  const prefersReducedMotion = useReducedMotion()
 
   useFrame((_, dt) => {
     if (!group.current) return
     // Photos are billboarded — spinning the parent has no visual effect
     // and breaks hover affordance, so only spin primitives.
-    if (spin && !imageUrl) group.current.rotation.y += dt * 0.25
-    if (selected) {
+    if (spin && !imageUrl && !prefersReducedMotion)
+      group.current.rotation.y += dt * 0.25
+    if (selected && !prefersReducedMotion) {
       group.current.position.y =
         baseY + Math.sin(performance.now() * 0.002) * 0.025
     } else {
@@ -162,12 +165,22 @@ function SelectionSpot({ footprint }: { footprint: number }) {
     () => ({
       uColor: { value: new THREE.Color('#049fd9') },
       uTime: { value: 0 },
+      uPulse: { value: 1 },
     }),
     [],
   )
 
+  const prefersReducedMotion = useReducedMotion()
+
   useFrame(({ clock }) => {
-    uniforms.uTime.value = clock.getElapsedTime()
+    if (prefersReducedMotion) {
+      // Freeze the pulse at its midpoint — spotlight remains, but doesn't breathe.
+      uniforms.uTime.value = 0
+      uniforms.uPulse.value = 0
+    } else {
+      uniforms.uTime.value = clock.getElapsedTime()
+      uniforms.uPulse.value = 1
+    }
   })
 
   const poolRadius = Math.max(0.75, footprint * 0.55)
@@ -222,6 +235,7 @@ const poolFrag = /* glsl */ `
   varying vec2 vUv;
   uniform vec3 uColor;
   uniform float uTime;
+  uniform float uPulse;
 
   void main() {
     vec2 c = vUv - 0.5;
@@ -229,7 +243,7 @@ const poolFrag = /* glsl */ `
     // Soft falloff: bright near center, transparent at the rim.
     float core = 1.0 - smoothstep(0.0, 0.45, d);
     float halo = 1.0 - smoothstep(0.0, 1.0, d);
-    float pulse = 0.92 + 0.08 * sin(uTime * 1.8);
+    float pulse = mix(1.0, 0.92 + 0.08 * sin(uTime * 1.8), uPulse);
     float a = clamp(core * 0.55 + halo * 0.22, 0.0, 1.0) * pulse;
     gl_FragColor = vec4(uColor, a);
   }

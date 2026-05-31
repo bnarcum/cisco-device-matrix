@@ -131,7 +131,7 @@ export function DeviceDrawer({
                 .join(' · ')}
             </p>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
               <button
                 onClick={() => onToggleCompare(device)}
                 data-active={inCompare ? 'true' : 'false'}
@@ -146,6 +146,19 @@ export function DeviceDrawer({
               </button>
               <button onClick={onClose}>Close</button>
             </div>
+
+            {device.category === 'room' && (
+              <a
+                href="https://designer.webex.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="drawer-designer-link"
+                aria-label="See this in a designed room — Webex Workspace Designer (opens in a new tab)"
+              >
+                <span aria-hidden>⌗</span>
+                <span>See this in a designed room ↗</span>
+              </a>
+            )}
 
             <p
               style={{
