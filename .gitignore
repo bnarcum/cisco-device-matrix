@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Upstream source brochure (re-downloaded by scripts/fetch-pdf.py)
+scripts/cisco_matrix.pdf
+docs/
