@@ -30,7 +30,7 @@ export function ShowroomScene({ devices, selected, onSelect }: Props) {
         dampingFactor={0.08}
         minDistance={2.5}
         maxDistance={20}
-        maxPolarAngle={Math.PI * 0.49}
+        maxPolarAngle={Math.PI * 0.42}
       />
 
       <ShowroomFloor />

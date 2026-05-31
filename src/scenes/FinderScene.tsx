@@ -10,6 +10,7 @@ import {
 import type { Category, Device, RoomSize } from '../data/cisco'
 import { DevicePedestal } from '../three/DevicePedestal'
 import { SceneEnv } from '../three/SceneEnv'
+import { ShowroomFloor } from '../three/ShowroomFloor'
 import { deviceImage } from '../data/deviceImages'
 
 interface Filter {
@@ -81,19 +82,11 @@ export function FinderScene({
         target={cameraTarget}
         minDistance={4}
         maxDistance={18}
-        maxPolarAngle={Math.PI * 0.49}
+        maxPolarAngle={Math.PI * 0.42}
         enablePan={step === 2}
       />
 
-      {/* Soft floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[20, 64]} />
-        <meshStandardMaterial color="#0a1220" />
-      </mesh>
-      <gridHelper
-        args={[40, 40, '#172131', '#0d1521']}
-        position={[0, 0.001, 0]}
-      />
+      <ShowroomFloor />
 
       {/* Headline when results are shown */}
       {step === 2 && (

@@ -2,21 +2,30 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 import { MeshReflectorMaterial } from '@react-three/drei'
 
+interface FloorProps {
+  /**
+   * When true, overlays a procedural anti-aliased grid (the original
+   * showroom look). Default is `false`; the floor itself reads cleanly
+   * thanks to the reflection alone.
+   */
+  showGrid?: boolean
+}
+
 /**
- * Polished showroom floor:
- *   1. A wide MeshReflectorMaterial disc gives a whisper-faint reflection so
- *      the pedestals feel anchored to the ground instead of floating.
- *   2. A second disc on top runs a procedural grid shader with `fwidth()`
- *      anti-aliasing, dual spacing (faint sub-lines every 0.5 m, brighter
- *      primaries every 1 m), Cisco-blue cardinal axes, and a radial fade
- *      so lines dissolve into the background near the horizon.
- *   3. No `gridHelper` — those lines are hard, untapered and read as a
- *      debug tool.
+ * Polished floor used by both the Showroom and Finder scenes.
+ *
+ * Base layer is a wide MeshReflectorMaterial disc that gives a whisper-
+ * faint reflection so pedestals feel anchored to the ground instead of
+ * floating. Material is rendered DoubleSide so a stray under-floor camera
+ * angle never sees through the world.
+ *
+ * Optional grid overlay (off by default) renders a procedural shader grid
+ * with fwidth() anti-aliasing, dual spacing, Cisco-blue cardinal axes,
+ * and a radial fade so lines dissolve toward the horizon.
  */
-export function ShowroomFloor() {
+export function ShowroomFloor({ showGrid = false }: FloorProps = {}) {
   return (
     <group>
-      {/* Reflective base */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0, 0]}
@@ -36,11 +45,11 @@ export function ShowroomFloor() {
           depthScale={0.4}
           minDepthThreshold={0.7}
           maxDepthThreshold={1.4}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Grid overlay */}
-      <GridDisc />
+      {showGrid && <GridDisc />}
     </group>
   )
 }
