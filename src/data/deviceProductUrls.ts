@@ -1,0 +1,80 @@
+/**
+ * Official Cisco/Webex product documentation URLs for drawer links.
+ * Run `npm run verify:product-urls` before deploy to catch broken links.
+ */
+export const DEVICE_PRODUCT_URLS: Readonly<Record<string, string>> = {
+  'board-pro-g2-55':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/board-pro-g2/model.html',
+  'board-pro-g2-75':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/board-pro-g2/model.html',
+  'room-kit-eqx':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/room-kit-eqx/model.html',
+  'room-bar':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/webex-room-bar/model.html',
+  'room-bar-pro':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/room-bar-pro/model.html',
+  'room-bar-byod':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-room-series/webex-room-bar-ds.html',
+  'room-kit-eq':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/room-kit-eq/model.html',
+  'room-kit-pro-g2':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-room-series/room-kit-pro-g2-ds.html',
+  desk:
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/webex-desk/model.html',
+  'desk-pro-g2':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-desk-series/desk-pro-g2.html',
+  'desk-mini':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-desk-mini/webex-desk-mini.html',
+  'video-phone-8875':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/unified-ip-phone-8800-series/video-phone-8875-ds.html',
+  'desk-phone-9871':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/ip-phones/desk-phone-9800-series-ds.html',
+  'desk-phone-9841':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/ip-phones/desk-phone-9800-series-ds.html',
+  'conference-8832':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/unified-ip-phone-8800-series/datasheet-c78-739624.html',
+  'wireless-9821':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/wireless-phone-9821/model.html',
+  'wireless-860':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-wireless-phone/datasheet-c78-744461.html',
+  'dect-6825':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/ip-dect-6800-series-multiplatform-firmware/ip-dect-6800-series-ds.html',
+  'headset-320':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/headset-320/model.html',
+  'headset-520':
+    'https://www.webex.com/us/en/devices/headsets/cisco-headset-500-series.html',
+  'headset-560':
+    'https://www.webex.com/us/en/devices/headsets/cisco-headset-500-series.html',
+  'headset-730':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/headset-730/model.html',
+  'headset-bang-olufsen-900':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/headsets/bang-olufsen-980-ds.html',
+  'headset-950':
+    'https://www.webex.com/us/en/devices/headsets/bang-and-olufsen-cisco-950.html',
+  'room-navigator-table':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-room-series/datasheet-c78-744227.html',
+  'room-navigator-wall':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-room-series/datasheet-c78-744228.html',
+  'table-mic-pro':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/collaboration-peripherals/table-microphone-pro-ds.html',
+  'ceiling-mic-pro':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/ceiling-microphone-pro/model.html',
+  'table-mic':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/table-microphone/model.html',
+  'ceiling-mic':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/telepresence-microphones/datasheet-c78-736073.html',
+  'desk-camera-1080':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/webex-desk-series/desk-camera-1080p-ds.html',
+  'desk-camera-4k':
+    'https://www.cisco.com/c/en/us/products/collateral/collaboration/datasheet-c78-744525.html',
+  'quad-camera':
+    'https://www.webex.com/us/en/devices/cameras/cisco-quad-camera.html',
+  'room-vision-ptz':
+    'https://www.webex.com/us/en/devices/cameras/cisco-room-vision-ptz-camera.html',
+  'ptz-4k-camera':
+    'https://www.cisco.com/c/en/us/support/collaboration-endpoints/ptz-4k-camera/model.html',
+}
+
+export function deviceProductUrl(deviceId: string): string | undefined {
+  return DEVICE_PRODUCT_URLS[deviceId]
+}

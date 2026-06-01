@@ -960,6 +960,10 @@ a:hover {
   margin-top: 0.5rem;
 }
 
+.drawer-product-page-link {
+  margin-top: 0.85rem;
+}
+
 /* ── Compare modal: copy-link button ───────────────────────────── */
 .compare-copy-link {
   padding: 0.35rem 0.75rem;

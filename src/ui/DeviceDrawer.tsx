@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { Category, Device } from '../data/cisco'
 import { CATEGORY_LABELS, ROOM_SIZE_LABELS } from '../data/cisco'
 import { deviceImage } from '../data/deviceImages'
+import { deviceProductUrl } from '../data/deviceProductUrls'
 
 const ROOMOS_DOCS_URL = 'https://roomos.cisco.com/doc/Welcome/Welcome'
 const COMPONENTS_CABLES_URL =
@@ -33,6 +34,8 @@ export function DeviceDrawer({
   canAddCompare,
   onToggleCompare,
 }: Props) {
+  const productUrl = device ? deviceProductUrl(device.id) : undefined
+
   return (
     <AnimatePresence>
       {device && (
@@ -209,6 +212,19 @@ export function DeviceDrawer({
                   </a>
                 )}
               </div>
+            )}
+
+            {productUrl && (
+              <a
+                href={productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="drawer-external-link drawer-product-page-link"
+                aria-label={`View official product page for ${device.name} on Cisco's website (opens in a new tab)`}
+              >
+                <span aria-hidden>↗</span>
+                <span>View official product page ↗</span>
+              </a>
             )}
 
             <p
