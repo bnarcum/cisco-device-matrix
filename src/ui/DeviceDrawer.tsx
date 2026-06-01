@@ -153,10 +153,10 @@ export function DeviceDrawer({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="drawer-designer-link"
-                aria-label="See this in a designed room — Webex Workspace Designer (opens in a new tab)"
+                aria-label="Configure this in Cisco Workspace Designer (opens in a new tab)"
               >
                 <span aria-hidden>⌗</span>
-                <span>See this in a designed room ↗</span>
+                <span>Configure this in Cisco Workspace Designer ↗</span>
               </a>
             )}
 
