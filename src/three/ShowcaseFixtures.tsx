@@ -73,6 +73,25 @@ export function DisplayTable({
         <boxGeometry args={[width * 0.94, 0.03, depth * 0.92]} />
         <meshStandardMaterial color="#e2dfd8" roughness={0.7} metalness={0.05} />
       </mesh>
+      {/* Cisco-blue trim along the front edge of the apron — defines
+          the bench visually and adds a brand cue without competing
+          with the products on top. */}
+      <mesh
+        position={[
+          0,
+          topHeight - topThickness - 0.04,
+          depth / 2 + 0.001,
+        ]}
+      >
+        <boxGeometry args={[width * 0.94, 0.005, 0.01]} />
+        <meshStandardMaterial
+          color="#049FD9"
+          roughness={0.4}
+          metalness={0.3}
+          transparent
+          opacity={0.55}
+        />
+      </mesh>
       {/* Four brushed-metal legs */}
       {[
         [legX, legY, legZ],
@@ -150,6 +169,25 @@ export function WallMount({
           metalness={0.02}
         />
       </mesh>
+      {/* Subtle vertical Cisco-blue accent stripe near one edge — a
+          small "this is a Cisco fixture" cue without painting the
+          whole wall. Sits flush against the wall front. */}
+      <mesh
+        position={[
+          -width / 2 + 0.18,
+          height * 0.45,
+          thickness / 2 + 0.006,
+        ]}
+      >
+        <boxGeometry args={[0.04, height * 0.8, 0.012]} />
+        <meshStandardMaterial
+          color="#049FD9"
+          roughness={0.4}
+          metalness={0.2}
+          transparent
+          opacity={0.7}
+        />
+      </mesh>
       {/* Children sit slightly in front of the wall so their plane
           doesn't z-fight with the wall geometry. */}
       <group position={[0, 0, thickness / 2 + 0.01]}>{children}</group>
@@ -214,6 +252,269 @@ export function WallMountedDevice({
   )
 }
 
+/* ─────────────────── ShowcaseDevice ─────────────────── */
+
+interface ShowcaseDeviceProps {
+  device: Device
+  /** Local position on the parent fixture surface (Y=0 = surface). */
+  position?: [number, number, number]
+  /** Multiplier on the device's natural longest-edge size. */
+  scale?: number
+  selected?: boolean
+  onClick?: (d: Device) => void
+}
+
+/**
+ * In-fixture device card. Replaces {@link DevicePedestal} for the
+ * Showcase view's tables, shelves, cases, and pedestals.
+ *
+ * Three deliberate differences from {@link DevicePedestal}:
+ *
+ *   1. Bottom-anchored. The photo plane's bottom edge sits at the
+ *      caller-provided Y=0 surface regardless of aspect ratio, so a
+ *      wide phone or a tall phone both visibly rest on the table.
+ *   2. Fixed orientation. No `<Billboard>` follow-camera pivot — the
+ *      parent fixture's `rotationY` controls which way the card faces.
+ *      Devices visibly sit on their fixtures even when orbiting.
+ *   3. No 0.7 m floor on size. Earbuds at 0.07 m read as earbuds; a
+ *      Board Pro at 1.3 m reads as a board.
+ *
+ * Selection visuals (contact shadow + Cisco-blue floor pool ring) are
+ * rendered inline so the global SelectionRing helper isn't needed.
+ */
+export function ShowcaseDevice({
+  device,
+  position = [0, 0, 0],
+  scale = 1,
+  selected = false,
+  onClick,
+}: ShowcaseDeviceProps) {
+  const url = deviceImage(device.id)
+  // Honest sizing — no 0.7 m floor; clamp only to keep a board from
+  // exceeding the fixture or an earbud from collapsing into a dot.
+  const realSize = Math.max(device.size[0], device.size[1])
+  const targetSize = THREE.MathUtils.clamp(realSize * scale, 0.08, 2.4)
+
+  const [texture, setTexture] = useState<THREE.Texture | null>(() =>
+    url ? (textureCache.get(url) ?? null) : null,
+  )
+
+  useEffect(() => {
+    if (!url) return
+    let alive = true
+    // loadTexture already short-circuits to the cached texture via
+    // Promise.resolve(), so we don't need a synchronous fast-path
+    // here (which would trip react-hooks/set-state-in-effect).
+    loadTexture(url)
+      .then((t) => {
+        if (alive) setTexture(t)
+      })
+      .catch(() => {
+        if (alive) setTexture(null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [url])
+
+  const [planeW, planeH] = useMemo<[number, number]>(() => {
+    const image = texture?.image as
+      | { width?: number; height?: number }
+      | undefined
+    if (!image?.width || !image?.height) {
+      // While the texture loads, render to expected aspect — devices
+      // are mostly wider than tall, so default to a 4:3-ish footprint.
+      return [targetSize, targetSize * 0.75]
+    }
+    const aspect = image.width / image.height
+    if (aspect >= 1) return [targetSize, targetSize / aspect]
+    return [targetSize * aspect, targetSize]
+  }, [texture, targetSize])
+
+  // No image at all → primitive fallback. Does NOT camera-face.
+  if (!url) {
+    return (
+      <FallbackBox
+        device={device}
+        position={position}
+        scale={scale}
+        selected={selected}
+        onClick={onClick}
+      />
+    )
+  }
+
+  // Texture still loading — render nothing rather than a stretched
+  // placeholder, mirroring the PhotoBillboard convention.
+  if (!texture) return null
+
+  // Floor-pool ring sized to fit just outside the contact shadow's
+  // longest dimension. Floor a minimum so tiny earbuds still read.
+  const ringOuter = Math.max(planeW * 0.5, 0.08)
+  const ringInner = ringOuter * 0.82
+
+  return (
+    <group
+      position={position}
+      onClick={
+        onClick
+          ? (e) => {
+              e.stopPropagation()
+              onClick(device)
+            }
+          : undefined
+      }
+      onPointerOver={
+        onClick
+          ? (e) => {
+              e.stopPropagation()
+              document.body.style.cursor = 'pointer'
+            }
+          : undefined
+      }
+      onPointerOut={
+        onClick
+          ? (e) => {
+              e.stopPropagation()
+              document.body.style.cursor = ''
+            }
+          : undefined
+      }
+    >
+      {/* Localized contact shadow on the surface beneath the card.
+          A flattened circle reads softer than a hard rectangle and
+          costs nothing extra. */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.0005, 0]}
+        scale={[1, 0.5, 1]}
+      >
+        <circleGeometry args={[planeW * 0.35, 32]} />
+        <meshBasicMaterial
+          color="#000"
+          transparent
+          opacity={0.28}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Selection ring on the surface, just outside the contact
+          shadow. Cisco blue, opacity ~0.55 to match the showcase
+          selection palette. */}
+      {selected && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0.0008, 0]}
+          renderOrder={4}
+        >
+          <ringGeometry args={[ringInner, ringOuter, 64]} />
+          <meshBasicMaterial
+            color="#049FD9"
+            transparent
+            opacity={0.55}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+      {/* Card body — gives the photo physical thickness and a
+          believable rim where it meets the surface. The body is
+          slightly inset from the photo so the photo's silhouette
+          reads against the dark card. */}
+      <mesh
+        position={[0, planeH / 2 + 0.001, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[planeW * 0.95, planeH * 0.95, 0.025]} />
+        <meshStandardMaterial
+          color="#2a2d33"
+          roughness={0.55}
+          metalness={0.2}
+        />
+      </mesh>
+      {/* Photo plane on the front face of the card */}
+      <mesh position={[0, planeH / 2 + 0.001, 0.013]}>
+        <planeGeometry args={[planeW, planeH]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          alphaTest={0.5}
+          depthWrite
+          toneMapped={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+/**
+ * Tiny primitive fallback for {@link ShowcaseDevice} when no brochure
+ * photo is available. Bottom-anchored to local Y=0 with a localized
+ * contact shadow, so it still reads as physically resting on the
+ * fixture surface.
+ */
+function FallbackBox({
+  device,
+  position,
+  scale,
+  selected,
+  onClick,
+}: {
+  device: Device
+  position: [number, number, number]
+  scale: number
+  selected: boolean
+  onClick?: (d: Device) => void
+}) {
+  const w = THREE.MathUtils.clamp(device.size[0] * scale, 0.05, 1.5)
+  const h = THREE.MathUtils.clamp(device.size[1] * scale, 0.05, 1.5)
+  const d = THREE.MathUtils.clamp(
+    Math.max(device.size[2] ?? 0.05, 0.05) * scale,
+    0.02,
+    0.6,
+  )
+
+  return (
+    <group
+      position={position}
+      onClick={
+        onClick
+          ? (e) => {
+              e.stopPropagation()
+              onClick(device)
+            }
+          : undefined
+      }
+    >
+      {/* contact shadow */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.0005, 0]}
+        scale={[1, 0.6, 1]}
+      >
+        <circleGeometry args={[Math.max(w, d) * 0.7, 32]} />
+        <meshBasicMaterial
+          color="#000"
+          transparent
+          opacity={0.26}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh position={[0, h / 2 + 0.001, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial
+          color={device.surface}
+          emissive={selected ? '#049FD9' : '#000000'}
+          emissiveIntensity={selected ? 0.18 : 0}
+          roughness={0.55}
+          metalness={0.15}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 /* ─────────────────── DisplayCase ─────────────────── */
 
 interface DisplayCaseProps extends FixtureProps {
@@ -253,6 +554,19 @@ export function DisplayCase({
           color="#e8e6e0"
           roughness={0.6}
           metalness={0.05}
+        />
+      </mesh>
+      {/* Cisco-blue trim band around the top of the plinth — a thin
+          retail-fixture detail that visually separates the plinth
+          from the glass case sitting on top. */}
+      <mesh position={[0, baseHeight - 0.005, 0]}>
+        <boxGeometry args={[width + 0.085, 0.008, depth + 0.085]} />
+        <meshStandardMaterial
+          color="#049FD9"
+          roughness={0.4}
+          metalness={0.3}
+          transparent
+          opacity={0.5}
         />
       </mesh>
       {/* Glass cube on top of the base. We render six thin panes to keep
@@ -376,16 +690,33 @@ export function ShelfBank({
       </mesh>
       {/* Three horizontal shelves */}
       {shelfYs.map((y, i) => (
-        <mesh key={i} position={[0, y, 0]} receiveShadow>
-          <boxGeometry
-            args={[width - sideThickness * 2, shelfThickness, depth - 0.02]}
-          />
-          <meshStandardMaterial
-            color="#f0eee9"
-            roughness={0.55}
-            metalness={0.05}
-          />
-        </mesh>
+        <group key={i}>
+          <mesh position={[0, y, 0]} receiveShadow>
+            <boxGeometry
+              args={[width - sideThickness * 2, shelfThickness, depth - 0.02]}
+            />
+            <meshStandardMaterial
+              color="#f0eee9"
+              roughness={0.55}
+              metalness={0.05}
+            />
+          </mesh>
+          {/* Cisco-blue label strip along the front edge of each
+              shelf — the retail "shelf trim" we read at first glance
+              when walking past a fixture. */}
+          <mesh position={[0, y, depth / 2 - 0.008]}>
+            <boxGeometry
+              args={[width - sideThickness * 2, 0.006, 0.005]}
+            />
+            <meshStandardMaterial
+              color="#049FD9"
+              roughness={0.4}
+              metalness={0.3}
+              transparent
+              opacity={0.55}
+            />
+          </mesh>
+        </group>
       ))}
       <ContactShadows
         position={[0, 0.001, 0]}
@@ -579,9 +910,12 @@ function loadTexture(url: string): Promise<THREE.Texture> {
 }
 
 /**
- * Wall-locked photo plane (not a Billboard). The plane sits at the
- * specified position, fully oriented by its parent group (so the
- * wall-mount fixture's `rotationY` controls which way it faces).
+ * Wall-locked photo "board" with real physical depth. Renders a thin
+ * bezel/body box flush against the wall, the product photo on the
+ * front face of the bezel, a soft drop shadow on the wall behind, and
+ * a selection halo that peeks out around the bezel edge. The whole
+ * group is fully oriented by its parent (so the wall-mount fixture's
+ * `rotationY` controls which way the board faces).
  */
 function PhotoPanel({ url, position, size, selected, onClick }: PhotoPanelProps) {
   const [texture, setTexture] = useState<THREE.Texture | null>(
@@ -646,19 +980,46 @@ function PhotoPanel({ url, position, size, selected, onClick }: PhotoPanelProps)
           : undefined
       }
     >
-      {/* Selection halo behind the photo for wall-mounted items */}
+      {/* Soft drop shadow on the wall behind/around the board. Sits
+          flush with the wall surface, extends slightly beyond the
+          bezel so a halo of darker tone visibly anchors the board. */}
+      <mesh position={[0, 0, -0.008]}>
+        <planeGeometry args={[planeW * 1.15, planeH * 1.18]} />
+        <meshBasicMaterial
+          color="#000"
+          transparent
+          opacity={0.18}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Selection halo — Cisco-blue glow visible around the bezel
+          edge when the board is the selected device. Sits in front
+          of the drop shadow but behind the bezel back face. */}
       {selected && (
         <mesh position={[0, 0, -0.005]}>
           <planeGeometry args={[planeW * 1.08, planeH * 1.12]} />
           <meshBasicMaterial
             color="#049FD9"
             transparent
-            opacity={0.22}
+            opacity={0.3}
             depthWrite={false}
           />
         </mesh>
       )}
-      <mesh>
+      {/* Bezel / body — the visible thickness of the board against
+          the wall. 0.045 m is a believable real-board depth. */}
+      <mesh position={[0, 0, 0.022]} castShadow receiveShadow>
+        <boxGeometry args={[planeW * 1.02, planeH * 1.02, 0.045]} />
+        <meshStandardMaterial
+          color="#15171c"
+          roughness={0.45}
+          metalness={0.35}
+        />
+      </mesh>
+      {/* Photo on the front face of the bezel. alphaTest=0.5 cleanly
+          discards the brochure background so the rim of the device
+          reads against the dark bezel beneath, not the wall. */}
+      <mesh position={[0, 0, 0.045]}>
         <planeGeometry args={[planeW, planeH]} />
         <meshBasicMaterial
           map={texture}
@@ -667,6 +1028,22 @@ function PhotoPanel({ url, position, size, selected, onClick }: PhotoPanelProps)
           depthWrite
           toneMapped={false}
           side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Brushed-metal mounting bracket bar visible along the bottom
+          edge — a small "this is mounted" cue. */}
+      <mesh
+        position={[
+          0,
+          -planeH * 0.51 - 0.0075,
+          0.025,
+        ]}
+      >
+        <boxGeometry args={[planeW * 0.6, 0.015, 0.03]} />
+        <meshStandardMaterial
+          color="#cfd1d3"
+          roughness={0.45}
+          metalness={0.6}
         />
       </mesh>
     </group>

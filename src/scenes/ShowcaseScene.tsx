@@ -1,16 +1,15 @@
 import { useMemo } from 'react'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import type { Device } from '../data/cisco'
-import { DevicePedestal } from '../three/DevicePedestal'
 import { ShowcaseSceneEnv } from '../three/ShowcaseSceneEnv'
 import {
   DisplayCase,
   DisplayTable,
   FixtureLabel,
   Pedestal,
-  SelectionRing,
   ShelfBank,
   ShelfRow,
+  ShowcaseDevice,
   WallMount,
   WallMountedDevice,
 } from '../three/ShowcaseFixtures'
@@ -25,10 +24,10 @@ interface Props {
  * Workspace Showcase scene
  * ───────────────────────────
  * A bright, retail-style 3D exhibition where devices sit on fixtures
- * appropriate to their form factor. The camera enters at the front of a
- * central aisle and looks deep into the room. Devices remain interactive
- * (click to open the drawer) and update with the category filter just
- * like in the Showroom.
+ * appropriate to their form factor. The camera enters at human walking
+ * height (≈ 3.8 m back, looking forward) and devices visibly REST on
+ * their fixtures — bottom-anchored cards that don't camera-pivot, with
+ * localized contact shadows and per-device selection rings.
  *
  * Layout (X = left/right, Z = forward/back where -Z is deeper into the room):
  *
@@ -41,27 +40,19 @@ interface Props {
  *  [Mics shelf]   [Desk table]   [Desks table]   [Headset case]  ← Z ≈ +1..2
  *
  *  [Nav shelf]    [Phone table]  [Phone table]   [Cameras shelf] ← Z ≈ +4
- *                                ↑ camera at [0, 5, 14] looks down -Z
+ *                                ↑ camera at [0, 3.8, 13] looks down -Z
  */
 export function ShowcaseScene({ devices, selected, onSelect }: Props) {
   const groups = useMemo(() => groupDevices(devices), [devices])
-
-  // Resolve fixture-local positions for every device so that selection
-  // visuals (the floor pool ring) can be parented to the device's
-  // world-space ground location even though the device itself is parented
-  // to a fixture group.
-  const selectionRing = useMemo(() => {
-    if (!selected) return null
-    return findGroundPositionFor(selected.id, groups)
-  }, [selected, groups])
 
   return (
     <>
       <ShowcaseSceneEnv />
       {/* Inject our own camera + controls so switching here from another
           mode always lands at the front of the aisle, mirroring the
-          Finder scene's pattern. */}
-      <PerspectiveCamera makeDefault fov={45} position={[0, 5, 14]} />
+          Finder scene's pattern. The lowered camera reads more like
+          walking into a retail space at human height. */}
+      <PerspectiveCamera makeDefault fov={45} position={[0, 3.8, 13]} />
       <OrbitControls
         makeDefault
         enablePan
@@ -152,11 +143,11 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
         return (
           <Pedestal key={i} position={pos} rotationY={0} width={0.7} height={0.9} depth={0.7}>
             {d && (
-              <DevicePedestal
+              <ShowcaseDevice
                 device={d}
                 position={[0, 0, 0]}
+                scale={1.0}
                 selected={selected?.id === d.id}
-                showLabel={false}
                 onClick={onSelect}
               />
             )}
@@ -168,23 +159,23 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
       <FixtureLabel label="Desk Series" position={[0, 2.6, 0.5]} />
       <DisplayTable position={[-2.4, 0, 0.5]} rotationY={0} width={2.2} depth={0.95}>
         {groups.desks.slice(0, 2).map((d, i) => (
-          <DevicePedestal
+          <ShowcaseDevice
             key={d.id}
             device={d}
             position={[(i - 0.5) * 1.0, 0, 0]}
+            scale={0.9}
             selected={selected?.id === d.id}
-            showLabel={false}
             onClick={onSelect}
           />
         ))}
       </DisplayTable>
       <DisplayTable position={[2.4, 0, 0.5]} rotationY={0} width={1.6} depth={0.95}>
         {groups.desks[2] && (
-          <DevicePedestal
+          <ShowcaseDevice
             device={groups.desks[2]}
             position={[0, 0, 0]}
+            scale={0.9}
             selected={selected?.id === groups.desks[2].id}
-            showLabel={false}
             onClick={onSelect}
           />
         )}
@@ -207,20 +198,21 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
         height={0.7}
         depth={0.7}
       >
-        {/* 2 × 3 grid of headsets inside the case */}
+        {/* 3 across × 2 deep grid of headsets inside the case. With
+            ShowcaseDevice's honest sizing, headsets render at ~0.2 m
+            and comfortably fit a 1.5 × 0.7 case. */}
         {groups.headsets.slice(0, 6).map((d, i) => {
           const col = i % 3
           const row = Math.floor(i / 3)
-          const x = (col - 1) * 0.46
-          const z = (row - 0.5) * 0.32
+          const x = (col - 1) * 0.4
+          const z = (row - 0.5) * 0.25
           return (
-            <DevicePedestal
+            <ShowcaseDevice
               key={d.id}
               device={d}
               position={[x, 0, z]}
-              scale={0.36}
+              scale={0.9}
               selected={selected?.id === d.id}
-              showLabel={false}
               onClick={onSelect}
             />
           )
@@ -236,7 +228,7 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
         height={1.7}
         depth={0.45}
       >
-        {/* Distribute up to 5 cameras across 3 shelves: 2 / 2 / 1 */}
+        {/* 2 cameras per shelf across 3 shelves, ~0.5 m apart */}
         {(() => {
           const cams = groups.cameras
           const rows: Device[][] = [
@@ -248,13 +240,12 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
           return rows.map((row, ri) => (
             <ShelfRow key={ri} y={shelfYs[ri]}>
               {row.map((d, i) => (
-                <DevicePedestal
+                <ShowcaseDevice
                   key={d.id}
                   device={d}
-                  position={[(i - (row.length - 1) / 2) * 0.42, 0, 0]}
-                  scale={0.42}
+                  position={[(i - (row.length - 1) / 2) * 0.5, 0, 0]}
+                  scale={0.85}
                   selected={selected?.id === d.id}
-                  showLabel={false}
                   onClick={onSelect}
                 />
               ))}
@@ -283,13 +274,12 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
           return rows.map((row, ri) => (
             <ShelfRow key={ri} y={shelfYs[ri]}>
               {row.map((d, i) => (
-                <DevicePedestal
+                <ShowcaseDevice
                   key={d.id}
                   device={d}
-                  position={[(i - (row.length - 1) / 2) * 0.42, 0, 0]}
-                  scale={0.42}
+                  position={[(i - (row.length - 1) / 2) * 0.5, 0, 0]}
+                  scale={0.85}
                   selected={selected?.id === d.id}
-                  showLabel={false}
                   onClick={onSelect}
                 />
               ))}
@@ -310,25 +300,16 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
         depth={0.8}
       >
         {groups.navigators.slice(0, 2).map((d, i) => (
-          <DevicePedestal
+          <ShowcaseDevice
             key={d.id}
             device={d}
             position={[(i - 0.5) * 0.85, 0, 0]}
+            scale={0.85}
             selected={selected?.id === d.id}
-            showLabel={false}
             onClick={onSelect}
           />
         ))}
       </DisplayTable>
-
-      {/* Selection ring under the selected device (replaces the showroom
-          SpotLight cone, which is invisible against a light scene). */}
-      {selectionRing && (
-        <SelectionRing
-          position={selectionRing.position}
-          radius={selectionRing.radius}
-        />
-      )}
     </>
   )
 }
@@ -337,7 +318,8 @@ export function ShowcaseScene({ devices, selected, onSelect }: Props) {
 
 /**
  * Phones are split across two display tables so 7 IP/wireless devices
- * never have to crowd onto a single 1.6 m bench.
+ * never have to crowd onto a single 1.6 m bench. With ShowcaseDevice's
+ * honest sizing the phones render at ~0.2 m and fit comfortably.
  */
 function PhoneTables({
   devices,
@@ -363,13 +345,12 @@ function PhoneTables({
         depth={0.9}
       >
         {tableA.map((d, i) => (
-          <DevicePedestal
+          <ShowcaseDevice
             key={d.id}
             device={d}
-            position={[(i - (tableA.length - 1) / 2) * 0.62, 0, 0]}
-            scale={0.55}
+            position={[(i - (tableA.length - 1) / 2) * 0.6, 0, 0]}
+            scale={0.7}
             selected={selected?.id === d.id}
-            showLabel={false}
             onClick={onSelect}
           />
         ))}
@@ -381,13 +362,12 @@ function PhoneTables({
         depth={0.9}
       >
         {tableB.map((d, i) => (
-          <DevicePedestal
+          <ShowcaseDevice
             key={d.id}
             device={d}
             position={[(i - (tableB.length - 1) / 2) * 0.6, 0, 0]}
-            scale={0.55}
+            scale={0.7}
             selected={selected?.id === d.id}
-            showLabel={false}
             onClick={onSelect}
           />
         ))}
@@ -454,102 +434,4 @@ function groupDevices(devices: Device[]): DeviceGroups {
   }
 
   return { boards, bars, kits, desks, phones, headsets, cameras, mics, navigators }
-}
-
-/* ─────────────────── selection ring helper ─────────────────── */
-
-interface GroundPos {
-  position: [number, number, number]
-  radius: number
-}
-
-/**
- * Returns the world-space ground position under the selected device's
- * fixture so the {@link SelectionRing} can paint a pool of Cisco-blue
- * directly beneath it. Falling back to the device's category centroid
- * keeps the visual present even if a fixture isn't laid out yet.
- *
- * NOTE: this is a coarse approximation — it mirrors the fixture positions
- * declared above. Keep this in sync when the layout numbers change.
- */
-function findGroundPositionFor(
-  id: string,
-  groups: DeviceGroups,
-): GroundPos | null {
-  // Boards
-  const boardIdx = groups.boards.findIndex((d) => d.id === id)
-  if (boardIdx >= 0) {
-    const x = boardIdx === 0 ? -3.6 : 3.6
-    return { position: [x, 0, -11.5], radius: 1.6 }
-  }
-
-  // Bars
-  const barIdx = groups.bars.findIndex((d) => d.id === id)
-  if (barIdx >= 0) {
-    const positions: [number, number, number][] = [
-      [-5.5, 0, -7],
-      [-1.8, 0, -8.2],
-      [5.5, 0, -7],
-    ]
-    const slot = groups.bars.length === 2 ? [0, 2][barIdx] : barIdx
-    return { position: positions[slot] ?? positions[barIdx], radius: 1.0 }
-  }
-
-  // Kits
-  const kitIdx = groups.kits.findIndex((d) => d.id === id)
-  if (kitIdx >= 0) {
-    const positions: [number, number, number][] = [
-      [-4.2, 0, -3],
-      [4.2, 0, -3],
-      [0, 0, -3.6],
-    ]
-    return { position: positions[kitIdx] ?? positions[0], radius: 0.85 }
-  }
-
-  // Desks
-  const deskIdx = groups.desks.findIndex((d) => d.id === id)
-  if (deskIdx >= 0) {
-    if (deskIdx < 2) {
-      const x = -2.4 + (deskIdx - 0.5) * 1.0
-      return { position: [x, 0, 0.5], radius: 0.7 }
-    }
-    return { position: [2.4, 0, 0.5], radius: 0.7 }
-  }
-
-  // Phones
-  const phoneIdx = groups.phones.findIndex((d) => d.id === id)
-  if (phoneIdx >= 0) {
-    const half = Math.ceil(groups.phones.length / 2)
-    if (phoneIdx < half) {
-      const tableA = groups.phones.slice(0, half)
-      const x = -4.6 + (phoneIdx - (tableA.length - 1) / 2) * 0.62
-      return { position: [x, 0, 4.5], radius: 0.55 }
-    }
-    const tableB = groups.phones.slice(half)
-    const localIdx = phoneIdx - half
-    const x = -2.2 + (localIdx - (tableB.length - 1) / 2) * 0.6
-    return { position: [x, 0, 4.5], radius: 0.55 }
-  }
-
-  // Headsets — all live inside the display case at (4.2, 0, 4.5)
-  if (groups.headsets.some((d) => d.id === id)) {
-    return { position: [4.2, 0, 4.5], radius: 1.0 }
-  }
-
-  // Cameras — shelf at (8.5, 0, 2)
-  if (groups.cameras.some((d) => d.id === id)) {
-    return { position: [8.5, 0, 2], radius: 1.0 }
-  }
-
-  // Mics — shelf at (-8.5, 0, 2.5)
-  if (groups.mics.some((d) => d.id === id)) {
-    return { position: [-8.5, 0, 2.5], radius: 1.0 }
-  }
-
-  // Navigators — table at (-8.5, 0, -1.5)
-  if (groups.navigators.some((d) => d.id === id)) {
-    return { position: [-8.5, 0, -1.5], radius: 0.8 }
-  }
-
-  return null
 }
