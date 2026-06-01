@@ -8,6 +8,7 @@ import {
 } from './data/cisco'
 import type { Category, Device, RoomSize } from './data/cisco'
 import { ShowroomScene } from './scenes/ShowroomScene'
+import { ShowcaseScene } from './scenes/ShowcaseScene'
 import { FinderScene } from './scenes/FinderScene'
 import { DeviceDrawer } from './ui/DeviceDrawer'
 import { CompareTray } from './ui/CompareTray'
@@ -21,8 +22,8 @@ import {
   useUrlState,
 } from './hooks/useUrlState'
 
-type Mode = 'showroom' | 'finder'
-const MODES: readonly Mode[] = ['showroom', 'finder']
+type Mode = 'showroom' | 'showcase' | 'finder'
+const MODES: readonly Mode[] = ['showroom', 'showcase', 'finder']
 
 const MAX_COMPARE = 3
 
@@ -238,6 +239,12 @@ export default function App() {
             Showroom
           </button>
           <button
+            data-active={mode === 'showcase' ? 'true' : 'false'}
+            onClick={() => setMode('showcase')}
+          >
+            Showcase
+          </button>
+          <button
             data-active={mode === 'finder' ? 'true' : 'false'}
             onClick={() => setMode('finder')}
           >
@@ -299,6 +306,13 @@ export default function App() {
               onSelect={(d) => selectDevice(d)}
             />
           )}
+          {mode === 'showcase' && (
+            <ShowcaseScene
+              devices={visibleDevices}
+              selected={selected}
+              onSelect={(d) => selectDevice(d)}
+            />
+          )}
           {mode === 'finder' && (
             <FinderScene
               devices={DEVICES}
@@ -314,7 +328,7 @@ export default function App() {
         </Canvas>
 
         <div className="overlay">
-          {mode === 'showroom' && (
+          {(mode === 'showroom' || mode === 'showcase') && (
             <Filters
               value={filter}
               onChange={setFilter}
@@ -353,6 +367,8 @@ function cameraFor(mode: Mode): [number, number, number] {
   switch (mode) {
     case 'showroom':
       return [9, 6, 9]
+    case 'showcase':
+      return [0, 5, 14]
     case 'finder':
       return [0, 4.5, 9]
   }
