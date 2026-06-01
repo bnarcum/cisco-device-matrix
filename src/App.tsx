@@ -15,7 +15,6 @@ import { CompareModal } from './ui/CompareModal'
 import { FinderOverlay, type FinderState } from './ui/FinderOverlay'
 import { SearchBar } from './ui/SearchBar'
 import {
-  enumArrayCodec,
   enumCodec,
   idArrayCodec,
   idCodec,
@@ -26,54 +25,6 @@ type Mode = 'showroom' | 'finder'
 const MODES: readonly Mode[] = ['showroom', 'finder']
 
 const MAX_COMPARE = 3
-
-/* ───────────────────── capability filter chips ───────────────────── */
-
-type Capability = 'wifi6e' | 'byod' | 'ai-camera' | 'anc-headset' | 'av-over-ip'
-
-const CAPABILITIES: readonly Capability[] = [
-  'wifi6e',
-  'byod',
-  'ai-camera',
-  'anc-headset',
-  'av-over-ip',
-]
-
-const CAPABILITY_LABELS: Record<Capability, string> = {
-  wifi6e: 'Wi-Fi 6E',
-  byod: 'BYOD',
-  'ai-camera': 'AI camera',
-  'anc-headset': 'ANC headset',
-  'av-over-ip': 'AV-over-IP',
-}
-
-function deviceMatchesCapability(d: Device, cap: Capability): boolean {
-  switch (cap) {
-    case 'wifi6e':
-      return !!d.connectivity?.some((s) => /Wi-Fi 6E/i.test(s))
-    case 'byod':
-      return (
-        /\bBYOD\b/i.test(d.tagline ?? '') ||
-        /\bBYOD\b/i.test(d.formFactor ?? '') ||
-        d.id.toLowerCase().includes('byod')
-      )
-    case 'ai-camera':
-      return (
-        !!d.highlights?.some((s) => /\bAI\b/i.test(s)) &&
-        ['room', 'desk', 'camera'].includes(d.category)
-      )
-    case 'anc-headset':
-      return (
-        d.category === 'headset' &&
-        !!d.highlights?.some((s) => /\bANC\b|noise cancell?/i.test(s))
-      )
-    case 'av-over-ip':
-      return (
-        !!d.connectivity?.some((s) => /AV-over-IP/i.test(s)) ||
-        !!d.highlights?.some((s) => /AV-over-IP/i.test(s))
-      )
-  }
-}
 
 /* ───────────────────── helpers ───────────────────── */
 
@@ -115,11 +66,6 @@ export default function App() {
     'compare',
     [],
     idArrayCodec,
-  )
-  const [caps, setCaps] = useUrlState<Capability[]>(
-    'caps',
-    [],
-    enumArrayCodec(CAPABILITIES),
   )
   const [compareOpen, setCompareOpenRaw] = useUrlState<boolean>(
     'compareOpen',
@@ -193,14 +139,14 @@ export default function App() {
     [setRoomSize, setFinderForRaw],
   )
 
-  /* ── Filtered device list (category + capability AND-combined) ─ */
-  const visibleDevices = useMemo(() => {
-    let out = filter === 'all' ? DEVICES : DEVICES.filter((d) => d.category === filter)
-    if (caps.length > 0) {
-      out = out.filter((d) => caps.every((c) => deviceMatchesCapability(d, c)))
-    }
-    return out
-  }, [filter, caps])
+  /* ── Filtered device list ─────────────────────────────────────── */
+  const visibleDevices = useMemo(
+    () =>
+      filter === 'all'
+        ? DEVICES
+        : DEVICES.filter((d) => d.category === filter),
+    [filter],
+  )
 
   /* ── Selection helpers ─────────────────────────────────────────── */
   const selectDevice = useCallback(
@@ -220,15 +166,6 @@ export default function App() {
       })
     },
     [setCompareIds],
-  )
-
-  const toggleCapability = useCallback(
-    (c: Capability) => {
-      setCaps((prev) =>
-        prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
-      )
-    },
-    [setCaps],
   )
 
   const setCompareOpen = useCallback(
@@ -381,8 +318,6 @@ export default function App() {
             <Filters
               value={filter}
               onChange={setFilter}
-              caps={caps}
-              onToggleCap={toggleCapability}
             />
           )}
           {mode === 'finder' && (
@@ -426,54 +361,27 @@ function cameraFor(mode: Mode): [number, number, number] {
 function Filters({
   value,
   onChange,
-  caps,
-  onToggleCap,
 }: {
   value: Category | 'all'
   onChange: (c: Category | 'all') => void
-  caps: Capability[]
-  onToggleCap: (c: Capability) => void
 }) {
   return (
-    <div className="filters" role="region" aria-label="Showroom filters">
-      <div className="filters-row" role="toolbar" aria-label="Category filter">
-        <button
-          data-active={value === 'all' ? 'true' : 'false'}
-          onClick={() => onChange('all')}
-        >
-          All
-        </button>
-        {CATEGORY_ORDER.map((c) => (
-          <button
-            key={c}
-            data-active={value === c ? 'true' : 'false'}
-            onClick={() => onChange(c)}
-          >
-            {CATEGORY_LABELS[c]}
-          </button>
-        ))}
-      </div>
-      <div
-        className="filters-row filters-caps"
-        role="toolbar"
-        aria-label="Capability filter"
+    <div className="filters" role="toolbar" aria-label="Category filter">
+      <button
+        data-active={value === 'all' ? 'true' : 'false'}
+        onClick={() => onChange('all')}
       >
-        <span className="filters-caps-label">Capabilities</span>
-        {CAPABILITIES.map((c) => {
-          const active = caps.includes(c)
-          return (
-            <button
-              key={c}
-              className="cap-chip"
-              data-active={active ? 'true' : 'false'}
-              aria-pressed={active}
-              onClick={() => onToggleCap(c)}
-            >
-              {CAPABILITY_LABELS[c]}
-            </button>
-          )
-        })}
-      </div>
+        All
+      </button>
+      {CATEGORY_ORDER.map((c) => (
+        <button
+          key={c}
+          data-active={value === c ? 'true' : 'false'}
+          onClick={() => onChange(c)}
+        >
+          {CATEGORY_LABELS[c]}
+        </button>
+      ))}
     </div>
   )
 }

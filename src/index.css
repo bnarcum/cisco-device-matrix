@@ -547,7 +547,7 @@ a:hover {
   bottom: 1rem;
   left: 1rem;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
   max-width: 70%;
@@ -556,48 +556,6 @@ a:hover {
   background: rgba(5, 8, 15, 0.55);
   border: 1px solid var(--line);
   backdrop-filter: blur(10px);
-}
-
-.filters-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.filters-caps {
-  border-top: 1px dashed var(--line-strong);
-  padding-top: 0.45rem;
-}
-
-.filters-caps-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-  padding: 0 0.3rem;
-}
-
-.cap-chip {
-  padding: 0.32rem 0.7rem;
-  font-size: 0.78rem;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--fg-2);
-  cursor: pointer;
-}
-
-.cap-chip:hover {
-  border-color: var(--cisco-primary);
-  background: rgba(4, 159, 217, 0.14);
-}
-
-.cap-chip[data-active='true'] {
-  background: rgba(4, 159, 217, 0.28);
-  border-color: var(--cisco-primary);
-  color: var(--fg-1);
-  font-weight: 600;
 }
 
 .compare-tray {

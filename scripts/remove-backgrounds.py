@@ -4,6 +4,7 @@ public/devices/ so each image renders as a clean cutout against the
 
 Usage:
     python3 scripts/remove-backgrounds.py
+    python3 scripts/remove-backgrounds.py --only img-5ada38fb4a,img-8cb7938ed5
 
 The brochure embeds two flavors of product imagery:
 
@@ -28,6 +29,7 @@ in place.
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -67,6 +69,26 @@ CLOSE_RADIUS = 2
 # the dark scene.
 ALPHA_LOW = 16
 ALPHA_HIGH = 40
+
+# Per-image opt-in for "hole-punch enclosed dark silhouette" pass.
+# The brochure's multi-ear-cup headset shots include a black "hidden
+# head" prop inside the headband arch. The prop is fully enclosed by
+# the headset silhouette, so the white-key flood fill (which can only
+# remove near-white that connects to the image edge) leaves it
+# untouched. This per-image opt-in punches the prop out by area-
+# gating connected components of opaque-near-black pixels.
+#
+# Note: img-976ab4d643 (Headset 900 / B&O) is photographed differently
+# — it shows the earbuds in a charging case with no head prop — so it
+# is intentionally not listed here.
+HOLE_PUNCH: dict[str, dict[str, float]] = {
+    # stem (no extension)  → params dict
+    "img-5ada38fb4a": {"min_area_pct": 0.04},  # Headset 520
+    "img-bf6dfa019e": {"min_area_pct": 0.04},  # Headset 560
+    "img-8cb7938ed5": {"min_area_pct": 0.04},  # Headset 730 (twin)
+}
+HOLE_PUNCH_BLACK_TOL = 30  # RGB.min() < this counts as "deep black"
+HOLE_PUNCH_OPAQUE_TOL = 200  # alpha >= this is "fully opaque foreground"
 
 
 def has_native_alpha(img: Image.Image) -> bool:
@@ -168,26 +190,97 @@ def trim_transparent(img: Image.Image) -> Image.Image:
     return img.crop((x0, y0, x1, y1))
 
 
-def process_white_bg(src: Image.Image, session) -> Image.Image:
+def punch_enclosed_dark(img: Image.Image, min_area_pct: float) -> Image.Image:
+    """Remove large fully-enclosed near-black opaque regions from an
+    RGBA image. Returns a new RGBA image.
+
+    A pixel qualifies as "head prop" when:
+      - RGB.min() < HOLE_PUNCH_BLACK_TOL (deep black, not charcoal)
+      - alpha >= HOLE_PUNCH_OPAQUE_TOL  (opaque foreground)
+      - the connected component does NOT touch any alpha<HOLE_PUNCH_OPAQUE_TOL
+        pixel (i.e. it is fully enclosed by the headset silhouette)
+      - the component's pixel count >= min_area_pct * total_image_area
+    Such components have their alpha set to 0.
+    """
+    arr = np.asarray(img.convert("RGBA")).copy()
+    rgb_min = arr[:, :, :3].min(axis=2)
+    alpha = arr[:, :, 3]
+    deep_black = rgb_min < HOLE_PUNCH_BLACK_TOL
+    opaque = alpha >= HOLE_PUNCH_OPAQUE_TOL
+    candidate = deep_black & opaque
+    if not candidate.any():
+        return img
+    transparent_or_softrim = ~opaque
+    # Dilate the not-opaque mask by 1 px so a candidate component is
+    # considered "edge-touching" if it sits flush against any soft
+    # rim / transparent pixel.
+    struct = ndimage.generate_binary_structure(2, 2)
+    border = ndimage.binary_dilation(transparent_or_softrim, structure=struct)
+    labels, n = ndimage.label(candidate, structure=struct)
+    if n == 0:
+        return img
+    total = arr.shape[0] * arr.shape[1]
+    min_count = int(min_area_pct * total)
+    punch_mask = np.zeros_like(candidate)
+    for lab in range(1, n + 1):
+        comp = labels == lab
+        if comp.sum() < min_count:
+            continue
+        if border[comp].any():
+            continue
+        punch_mask |= comp
+    if not punch_mask.any():
+        return img
+    arr[punch_mask, 3] = 0
+    return Image.fromarray(arr, mode="RGBA")
+
+
+def process_white_bg(src: Image.Image, session, punch_params=None) -> Image.Image:
     cut = remove(src, session=session)
     cut = union_alpha(cut, src)
     cut = harden_alpha(cut)
+    if punch_params is not None:
+        cut = punch_enclosed_dark(cut, **punch_params)
     return trim_transparent(cut)
 
 
-def process_native_alpha(src: Image.Image) -> Image.Image:
+def process_native_alpha(src: Image.Image, punch_params=None) -> Image.Image:
     """Native-alpha sources already have a perfect cutout — running
     rembg over them destroys thin features (e.g. chrome floor-stand
     legs) because U^2-Net's mask is coarser than the embedded alpha.
     Just trim the transparent padding."""
     rgba = src.convert("RGBA")
+    if punch_params is not None:
+        rgba = punch_enclosed_dark(rgba, **punch_params)
     return trim_transparent(rgba)
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Normalize alpha for product photos in public/devices/.",
+    )
+    parser.add_argument(
+        "--only",
+        default=None,
+        help=(
+            "Comma-separated list of file stems (without extension) to "
+            "restrict processing to. Default: process every img-*.webp."
+        ),
+    )
+    args = parser.parse_args()
+
+    only_stems: set[str] | None = None
+    if args.only:
+        only_stems = {s.strip() for s in args.only.split(",") if s.strip()}
+
     here = Path(__file__).resolve().parent
     dir_ = here.parent / "public" / "devices"
     files = sorted(dir_.glob("img-*.webp"))
+    if only_stems is not None:
+        files = [f for f in files if f.stem in only_stems]
+        missing = only_stems - {f.stem for f in files}
+        for stem in sorted(missing):
+            print(f"  ! requested stem not found: {stem}", file=sys.stderr)
     if not files:
         print(f"no images found in {dir_}")
         return 1
@@ -197,33 +290,39 @@ def main() -> int:
     after = 0
     native_count = 0
     rembg_count = 0
+    punched_count = 0
 
     for i, f in enumerate(files, 1):
         before += f.stat().st_size
         try:
             src = Image.open(f)
             mode = src.mode
+            punch_params = HOLE_PUNCH.get(f.stem)
             if has_native_alpha(src):
-                cut = process_native_alpha(src)
+                cut = process_native_alpha(src, punch_params=punch_params)
                 tag = "native"
                 native_count += 1
             else:
                 src_rgba = src.convert("RGBA")
-                cut = process_white_bg(src_rgba, session)
+                cut = process_white_bg(src_rgba, session, punch_params=punch_params)
                 tag = "rembg "
                 rembg_count += 1
+            if punch_params is not None:
+                punched_count += 1
             cut.save(f, "WEBP", quality=86, method=6, lossless=False)
         except Exception as e:
             print(f"  ! {f.name}: {e}", file=sys.stderr)
             continue
         after += f.stat().st_size
+        punch_tag = " +punch" if punch_params is not None else ""
         print(f"  [{i:2d}/{len(files)}] [{tag}] {f.name}  "
               f"{src.size[0]}x{src.size[1]} -> "
-              f"{cut.size[0]}x{cut.size[1]} ({mode})")
+              f"{cut.size[0]}x{cut.size[1]} ({mode}){punch_tag}")
 
     print()
     print(f"native-alpha (passthrough): {native_count}")
     print(f"rembg + white-key:          {rembg_count}")
+    print(f"hole-punch applied:         {punched_count}")
     print(f"total: {before/1024:.0f} KB -> {after/1024:.0f} KB"
           f" (saved {(before-after)/1024:.0f} KB)")
     return 0
