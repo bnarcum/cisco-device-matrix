@@ -79,7 +79,12 @@ button:hover {
   border-color: var(--cisco-primary);
 }
 
-button[data-active='true'] {
+/* Selected / toggled-on pills — scoped so highlight states elsewhere
+   (e.g. search keyboard focus) don't inherit solid-fill + dark text. */
+.mode-switch button[data-active='true'],
+.filters button[data-active='true'],
+.compare-tray button[data-active='true'],
+.drawer button[data-active='true'] {
   background: var(--cisco-primary);
   color: #001724;
   border-color: var(--cisco-primary);
@@ -368,9 +373,17 @@ a:hover {
   cursor: pointer;
 }
 
-.search-result[data-active='true'],
+.search-result[data-highlighted='true'],
 .search-result:hover {
   background: rgba(4, 159, 217, 0.18);
+  color: var(--fg-1);
+  border-color: transparent;
+  font-weight: 500;
+}
+
+.search-result[data-highlighted='true'] .search-result-meta,
+.search-result:hover .search-result-meta {
+  color: var(--fg-2);
 }
 
 .search-result-text {

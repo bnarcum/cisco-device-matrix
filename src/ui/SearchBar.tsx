@@ -192,7 +192,7 @@ export function SearchBar({ devices, onSelect }: Props) {
             <button
               key={r.device.id}
               className="search-result"
-              data-active={i === safeActive ? 'true' : 'false'}
+              data-highlighted={i === safeActive ? 'true' : 'false'}
               role="option"
               aria-selected={i === safeActive}
               onMouseEnter={() => setActive(i)}
