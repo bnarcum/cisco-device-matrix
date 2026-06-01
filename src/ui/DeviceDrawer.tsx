@@ -147,7 +147,7 @@ export function DeviceDrawer({
               <button onClick={onClose}>Close</button>
             </div>
 
-            {device.category === 'room' && (
+            {(device.category === 'room' || device.category === 'desk') && (
               <a
                 href="https://designer.webex.com/"
                 target="_blank"

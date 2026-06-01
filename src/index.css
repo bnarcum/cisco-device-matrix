@@ -898,7 +898,7 @@ a:hover {
   }
 }
 
-/* ── Drawer designer link (room category only) ─────────────────── */
+/* ── Drawer designer link (room + desk categories) ─────────────── */
 .drawer-designer-link {
   display: inline-flex;
   align-items: center;
