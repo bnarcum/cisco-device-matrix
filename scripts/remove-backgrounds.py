@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 from rembg import new_session, remove
 from scipy import ndimage
 
@@ -67,8 +67,20 @@ CLOSE_RADIUS = 2
 # HIGH are forced to fully opaque so dark device bezels with low
 # mask-confidence don't render as ghostly translucent frames against
 # the dark scene.
-ALPHA_LOW = 16
-ALPHA_HIGH = 40
+#
+# The transition band is intentionally wide (4..180): a narrow band
+# (e.g. 16..40) crushes the natural anti-aliased rim on curved
+# silhouettes (headset arches, organic shapes) into a hard binary
+# mask, producing visibly stair-stepped/jagged edges. With the wider
+# band, mid-alpha bezel pixels (alpha 30-80) still get mapped well
+# above 128 — preserving the soft-bezel rescue — while the soft 1-3 px
+# anti-aliased rim that defines curved silhouettes survives. We then
+# apply a small gaussian blur to the alpha channel (RGB untouched) to
+# reintroduce smooth pixel-boundary anti-aliasing after the .point()
+# remap.
+ALPHA_LOW = 4
+ALPHA_HIGH = 180
+ALPHA_BLUR_RADIUS = 0.6
 
 # Per-image opt-in for "hole-punch enclosed dark silhouette" pass.
 # The brochure's multi-ear-cup headset shots include a black "hidden
@@ -106,13 +118,21 @@ def harden_alpha(img: Image.Image) -> Image.Image:
     keeping the true ~1px anti-aliased silhouette rim. Used on rembg
     output, where U^2-Net commonly returns soft mid-alpha for dark
     bezels which renders as ghostly translucent frames on dark
-    backgrounds."""
+    backgrounds.
+
+    The wide LOW..HIGH transition band preserves the natural
+    anti-aliased rim on curved silhouettes, and a small gaussian blur
+    on the alpha channel (RGB untouched) smooths pixel-boundary jaggies
+    introduced by the linear remap on already-discrete alpha values.
+    """
     r, g, b, a = img.split()
     span = ALPHA_HIGH - ALPHA_LOW
     a = a.point(
         lambda p: 0 if p < ALPHA_LOW
         else (255 if p > ALPHA_HIGH else int(255 * (p - ALPHA_LOW) / span))
     )
+    if ALPHA_BLUR_RADIUS > 0:
+        a = a.filter(ImageFilter.GaussianBlur(radius=ALPHA_BLUR_RADIUS))
     return Image.merge("RGBA", (r, g, b, a))
 
 

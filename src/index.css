@@ -1045,6 +1045,13 @@ a:hover {
   touch-action: pan-x;
   scrollbar-color: rgba(20, 30, 50, 0.25) transparent;
   scrollbar-width: thin;
+  /* Reserve space for the global category-filter pill (`.filters`)
+     which sits at bottom: 1rem inside the shared overlay. Without
+     this, the bottom shelf and its device captions visually tuck
+     under the pill. The filter pill is contained to other views by
+     pointer-events on .overlay > *, but its physical footprint still
+     overlaps this scroller. */
+  padding-bottom: 96px;
 }
 
 .aisle-root[data-reduced-motion='true'] .aisle-scroller {
@@ -1489,6 +1496,12 @@ a:hover {
 
 /* ── Mobile / narrow viewports ────────────────────────────────── */
 @media (max-width: 768px) {
+  .aisle-scroller {
+    /* Filter pill wraps tighter on narrow screens, so we can give a
+       touch more vertical real estate back to the shelves. */
+    padding-bottom: 84px;
+  }
+
   .aisle-track {
     gap: 48px;
     padding: 12px 56px 4px;
