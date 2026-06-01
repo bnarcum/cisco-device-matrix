@@ -1002,3 +1002,545 @@ a:hover {
   color: #ffffff;
   font-weight: 600;
 }
+
+/* ────────────────────────────────────────────────────────────────
+   AISLE — 2D horizontal-scrolling shelf view (replaces 3D Showcase)
+
+   Studio-floor backdrop with two stacked shelves per category bay.
+   Devices render as bottom-anchored cutout <img> tags with CSS
+   contact shadows; sections sit side-by-side and the user scrolls
+   left↔right. Visually: warm off-white floor, pale concrete plank
+   with a Cisco-blue trim band at the front edge.
+   ──────────────────────────────────────────────────────────────── */
+
+.aisle-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(
+      180deg,
+      #f7f4ef 0%,
+      #efece5 55%,
+      #ece9e3 100%
+    );
+  color: #1b1b1f;
+  overflow: hidden;
+}
+
+.aisle-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.aisle-scroller {
+  position: absolute;
+  inset: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-color: rgba(20, 30, 50, 0.25) transparent;
+  scrollbar-width: thin;
+}
+
+.aisle-root[data-reduced-motion='true'] .aisle-scroller {
+  scroll-behavior: auto;
+}
+
+.aisle-scroller::-webkit-scrollbar {
+  height: 8px;
+}
+
+.aisle-scroller::-webkit-scrollbar-thumb {
+  background: rgba(20, 30, 50, 0.18);
+  border-radius: 999px;
+}
+
+.aisle-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 30, 50, 0.32);
+}
+
+.aisle-track {
+  display: flex;
+  align-items: stretch;
+  gap: 72px;
+  padding: 16px 96px 8px;
+  height: 100%;
+  min-width: max-content;
+}
+
+.aisle-empty {
+  align-self: center;
+  margin: auto;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(4, 159, 217, 0.45);
+  color: var(--cisco-graphite);
+  font-size: 0.95rem;
+}
+
+/* ── Section bay ───────────────────────────────────────────────── */
+.aisle-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-width: 320px;
+  height: 100%;
+}
+
+.aisle-sign {
+  align-self: center;
+  margin: 6px 0 14px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(4, 159, 217, 0.75);
+  color: #0a1a2a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(20, 30, 50, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.aisle-shelves {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ── Shelf ─────────────────────────────────────────────────────── */
+.aisle-shelf {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.aisle-shelf--top {
+  flex: 0.85;
+}
+
+.aisle-shelf--bottom {
+  flex: 1;
+}
+
+/*  Surface — where products visually sit. Bottom-anchored with a
+    little breathing room at the top of the shelf. */
+.aisle-shelf-surface {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 24px;
+  padding: 12px 12px 0;
+  min-height: 0;
+  position: relative;
+}
+
+/*  Plank — a thin "shelf board" the products rest on. Subtle gradient
+    + inset shadow gives 3D-ish thickness without faking perspective.  */
+.aisle-shelf-plank {
+  flex: 0 0 auto;
+  height: 22px;
+  position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      #fdfaf5 0%,
+      #ebe6dc 55%,
+      #d8d1c3 100%
+    );
+  border-top: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -2px 4px rgba(70, 60, 40, 0.18),
+    0 6px 14px rgba(40, 30, 20, 0.16);
+}
+
+/*  Cisco-blue trim band along the front edge so each shelf reads as
+    a distinct retail bay. */
+.aisle-shelf-trim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--cisco-primary);
+  box-shadow: 0 0 6px rgba(4, 159, 217, 0.45);
+}
+
+/* ── Boards (tall) variant ─────────────────────────────────────── */
+.aisle-section--tall {
+  min-width: 380px;
+}
+
+.aisle-section--tall .aisle-shelf--full {
+  flex: 1;
+}
+
+.aisle-section--tall .aisle-shelf-surface {
+  gap: 32px;
+}
+
+/* ── Tile (one device on a shelf) ──────────────────────────────── */
+.aisle-tile {
+  flex: 0 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 10px;
+  transition:
+    transform 160ms ease,
+    filter 160ms ease;
+  isolation: isolate;
+}
+
+.aisle-tile:hover,
+.aisle-tile:focus-visible {
+  outline: none;
+  background: transparent;
+  border-color: transparent;
+}
+
+.aisle-tile:focus-visible {
+  box-shadow: 0 0 0 2px var(--cisco-primary);
+}
+
+.aisle-tile:hover {
+  transform: translateY(-5px);
+}
+
+.aisle-root[data-reduced-motion='true'] .aisle-tile,
+.aisle-root[data-reduced-motion='true'] .aisle-tile:hover {
+  transform: none;
+  transition: none;
+}
+
+.aisle-tile--small {
+  width: 168px;
+}
+
+.aisle-tile--large {
+  width: 220px;
+}
+
+.aisle-tile--tall {
+  width: 260px;
+}
+
+.aisle-tile-img-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1;
+}
+
+.aisle-tile--small .aisle-tile-img-wrap {
+  height: 180px;
+}
+
+.aisle-tile--large .aisle-tile-img-wrap {
+  height: 240px;
+}
+
+.aisle-tile--tall .aisle-tile-img-wrap {
+  height: 460px;
+}
+
+.aisle-tile-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  display: block;
+  -webkit-user-drag: none;
+  user-select: none;
+  filter: drop-shadow(0 6px 10px rgba(20, 30, 50, 0.18));
+  transition: filter 160ms ease;
+}
+
+.aisle-tile:hover .aisle-tile-img {
+  filter: drop-shadow(0 10px 16px rgba(20, 30, 50, 0.26));
+}
+
+.aisle-tile-fallback {
+  display: grid;
+  place-items: center;
+  width: 80%;
+  height: 60%;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d8d1c3, #c5beaf);
+  color: var(--cisco-graphite);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.4rem;
+}
+
+/*  Contact shadow — sits behind the img, hugs the bottom of the
+    shelf surface. Width follows the photo's bounding box. */
+.aisle-tile-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: 78%;
+  height: 18px;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(20, 30, 50, 0.42) 0%,
+    rgba(20, 30, 50, 0) 70%
+  );
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aisle-tile:hover .aisle-tile-shadow {
+  width: 88%;
+  height: 22px;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(20, 30, 50, 0.34) 0%,
+    rgba(20, 30, 50, 0) 72%
+  );
+}
+
+/*  Selection glow — Cisco-blue radial halo on the shelf under the
+    selected device. Sits behind the contact shadow. */
+.aisle-tile-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  transform: translateX(-50%);
+  width: 110%;
+  height: 80px;
+  background: radial-gradient(
+    50% 50% at 50% 65%,
+    rgba(4, 159, 217, 0.55) 0%,
+    rgba(4, 159, 217, 0.18) 35%,
+    rgba(4, 159, 217, 0) 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 200ms ease;
+}
+
+.aisle-tile[data-selected='true'] .aisle-tile-glow {
+  opacity: 1;
+}
+
+.aisle-tile[data-selected='true'] .aisle-tile-img {
+  filter: drop-shadow(0 12px 18px rgba(4, 159, 217, 0.4));
+}
+
+/* ── Caption ──────────────────────────────────────────────────── */
+.aisle-tile-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 0 4px;
+  text-align: center;
+}
+
+.aisle-tile-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0a1a2a;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aisle-tile-meta {
+  font-size: 0.66rem;
+  color: var(--cisco-graphite);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aisle-tile--small .aisle-tile-name {
+  font-size: 0.74rem;
+}
+
+.aisle-tile--small .aisle-tile-meta {
+  font-size: 0.62rem;
+}
+
+/* ── Edge fades ───────────────────────────────────────────────── */
+.aisle-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.aisle-fade--left {
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(247, 244, 239, 0.96) 0%,
+    rgba(247, 244, 239, 0) 100%
+  );
+}
+
+.aisle-fade--right {
+  right: 0;
+  background: linear-gradient(
+    270deg,
+    rgba(236, 233, 227, 0.96) 0%,
+    rgba(236, 233, 227, 0) 100%
+  );
+}
+
+/* ── Chevron buttons ──────────────────────────────────────────── */
+.aisle-chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(4, 159, 217, 0.55);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0a1a2a;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20, 30, 50, 0.18);
+  z-index: 3;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.aisle-chevron:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--cisco-primary);
+  color: var(--cisco-primary);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.aisle-root[data-reduced-motion='true'] .aisle-chevron:hover {
+  transform: translateY(-50%);
+}
+
+.aisle-chevron:focus-visible {
+  outline: 2px solid var(--cisco-primary);
+  outline-offset: 2px;
+}
+
+.aisle-chevron--left {
+  left: 12px;
+}
+
+.aisle-chevron--right {
+  right: 12px;
+}
+
+/* ── Floor strip (full width, below scroller) ─────────────────── */
+.aisle-floor {
+  flex: 0 0 auto;
+  height: 30px;
+  background: linear-gradient(
+    180deg,
+    #d8d1c3 0%,
+    #c5beaf 100%
+  );
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 6px 8px rgba(40, 30, 20, 0.12);
+}
+
+/* ── Mobile / narrow viewports ────────────────────────────────── */
+@media (max-width: 768px) {
+  .aisle-track {
+    gap: 48px;
+    padding: 12px 56px 4px;
+  }
+
+  .aisle-section {
+    min-width: 260px;
+  }
+
+  .aisle-section--tall {
+    min-width: 300px;
+  }
+
+  .aisle-tile--small {
+    width: 128px;
+  }
+
+  .aisle-tile--large {
+    width: 168px;
+  }
+
+  .aisle-tile--tall {
+    width: 200px;
+  }
+
+  .aisle-tile--small .aisle-tile-img-wrap {
+    height: 140px;
+  }
+
+  .aisle-tile--large .aisle-tile-img-wrap {
+    height: 180px;
+  }
+
+  .aisle-tile--tall .aisle-tile-img-wrap {
+    height: 320px;
+  }
+
+  .aisle-tile-name {
+    font-size: 0.7rem;
+  }
+
+  .aisle-tile-meta {
+    font-size: 0.6rem;
+  }
+
+  .aisle-chevron {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+
+  .aisle-fade {
+    width: 32px;
+  }
+}

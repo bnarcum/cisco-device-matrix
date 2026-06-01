@@ -8,7 +8,7 @@ import {
 } from './data/cisco'
 import type { Category, Device, RoomSize } from './data/cisco'
 import { ShowroomScene } from './scenes/ShowroomScene'
-import { ShowcaseScene } from './scenes/ShowcaseScene'
+import { AisleScene } from './scenes/AisleScene'
 import { FinderScene } from './scenes/FinderScene'
 import { DeviceDrawer } from './ui/DeviceDrawer'
 import { CompareTray } from './ui/CompareTray'
@@ -242,7 +242,7 @@ export default function App() {
             data-active={mode === 'showcase' ? 'true' : 'false'}
             onClick={() => setMode('showcase')}
           >
-            Showcase
+            Aisle
           </button>
           <button
             data-active={mode === 'finder' ? 'true' : 'false'}
@@ -294,38 +294,40 @@ export default function App() {
       </header>
 
       <div className="canvas-wrap">
-        <Canvas
-          camera={{ position: cameraFor(mode), fov: 45 }}
-          dpr={[1, 2]}
-          gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-        >
-          {mode === 'showroom' && (
-            <ShowroomScene
-              devices={visibleDevices}
-              selected={selected}
-              onSelect={(d) => selectDevice(d)}
-            />
-          )}
-          {mode === 'showcase' && (
-            <ShowcaseScene
-              devices={visibleDevices}
-              selected={selected}
-              onSelect={(d) => selectDevice(d)}
-            />
-          )}
-          {mode === 'finder' && (
-            <FinderScene
-              devices={DEVICES}
-              selected={selected}
-              step={finderState.step}
-              filter={{
-                roomSize: finderState.roomSize,
-                category: finderState.category,
-              }}
-              onSelect={(d) => selectDevice(d)}
-            />
-          )}
-        </Canvas>
+        {mode === 'showcase' ? (
+          <AisleScene
+            devices={visibleDevices}
+            selected={selected}
+            onSelect={(d) => selectDevice(d)}
+            filter={filter}
+          />
+        ) : (
+          <Canvas
+            camera={{ position: cameraFor(mode), fov: 45 }}
+            dpr={[1, 2]}
+            gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+          >
+            {mode === 'showroom' && (
+              <ShowroomScene
+                devices={visibleDevices}
+                selected={selected}
+                onSelect={(d) => selectDevice(d)}
+              />
+            )}
+            {mode === 'finder' && (
+              <FinderScene
+                devices={DEVICES}
+                selected={selected}
+                step={finderState.step}
+                filter={{
+                  roomSize: finderState.roomSize,
+                  category: finderState.category,
+                }}
+                onSelect={(d) => selectDevice(d)}
+              />
+            )}
+          </Canvas>
+        )}
 
         <div className="overlay">
           {(mode === 'showroom' || mode === 'showcase') && (
