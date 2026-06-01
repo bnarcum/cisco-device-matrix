@@ -252,45 +252,47 @@ export default function App() {
           </button>
         </nav>
         <SearchBar devices={DEVICES} onSelect={(d) => selectDevice(d)} />
-        <a
-          className="source-link"
-          href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open the official Cisco/Webex Collaboration Device Product Matrix brochure (PDF, opens in a new tab)"
-          title="Open the official Cisco/Webex brochure (PDF)"
-        >
-          <span className="source-link-icon" aria-hidden>
-            ⤓
+        <div className="topbar-actions">
+          <a
+            className="source-link"
+            href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open the official Cisco/Webex Collaboration Device Product Matrix brochure (PDF, opens in a new tab)"
+            title="Open the official Cisco/Webex brochure (PDF)"
+          >
+            <span className="source-link-icon" aria-hidden>
+              ⤓
+            </span>
+            <span className="source-link-text">
+              <span className="source-link-label">Source brochure</span>
+              <span className="source-link-meta">Cisco · Webex · PDF</span>
+            </span>
+          </a>
+          <span
+            className="catalog-chip"
+            aria-label="Catalog edition: February 2026"
+            title="February 2026 catalog edition"
+          >
+            Feb 2026 catalog
           </span>
-          <span className="source-link-text">
-            <span className="source-link-label">Source brochure</span>
-            <span className="source-link-meta">Cisco · Webex · PDF</span>
-          </span>
-        </a>
-        <span
-          className="catalog-chip"
-          aria-label="Catalog edition: February 2026"
-          title="February 2026 catalog edition"
-        >
-          Feb 2026 catalog
-        </span>
-        <a
-          className="designer-link"
-          href="https://designer.webex.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open Cisco Workspace Designer to plan a room (opens in a new tab)"
-          title="Open Cisco Workspace Designer"
-        >
-          <span className="designer-link-icon" aria-hidden>
-            ⌗
-          </span>
-          <span className="designer-link-text">
-            <span className="designer-link-label">Cisco Workspace Designer ↗</span>
-            <span className="designer-link-meta">Plan a room</span>
-          </span>
-        </a>
+          <a
+            className="designer-link"
+            href="https://designer.webex.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Cisco Workspace Designer to plan a room (opens in a new tab)"
+            title="Open Cisco Workspace Designer"
+          >
+            <span className="designer-link-icon" aria-hidden>
+              ⌗
+            </span>
+            <span className="designer-link-text">
+              <span className="designer-link-label">Cisco Workspace Designer ↗</span>
+              <span className="designer-link-meta">Plan a room</span>
+            </span>
+          </a>
+        </div>
       </header>
 
       <div className="canvas-wrap">
