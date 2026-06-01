@@ -280,15 +280,15 @@ export default function App() {
           href="https://designer.webex.com/"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Open Webex Workspace Designer to plan a room (opens in a new tab)"
-          title="Open Webex Workspace Designer"
+          aria-label="Open Cisco Workspace Designer to plan a room (opens in a new tab)"
+          title="Open Cisco Workspace Designer"
         >
           <span className="designer-link-icon" aria-hidden>
             ⌗
           </span>
           <span className="designer-link-text">
-            <span className="designer-link-label">Design a room ↗</span>
-            <span className="designer-link-meta">Webex · Workspace Designer</span>
+            <span className="designer-link-label">Cisco Workspace Designer ↗</span>
+            <span className="designer-link-meta">Plan a room</span>
           </span>
         </a>
       </header>

@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import {
+  Billboard,
   OrbitControls,
   PerspectiveCamera,
   Text,
@@ -89,49 +90,22 @@ export function FinderScene({
 
       <ShowroomFloor />
 
-      {/* Headline when results are shown */}
+      {/* Headline when results are shown — always faces the camera */}
       {step === 2 && (
-        <Text
-          position={[0, 2.6, -1]}
-          fontSize={0.22}
-          color="#049fd9"
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.005}
-          outlineColor="#05080f"
-        >
-          {matching.length === 0
-            ? 'No devices match — try a different combination'
-            : `${matching.length} match${matching.length === 1 ? '' : 'es'}`}
-        </Text>
-      )}
-
-      {/* Now plan your room → Webex Designer (in-canvas CTA) */}
-      {step === 2 && matching.length > 0 && (
-        <Html
-          position={[0, 2.15, -1]}
-          center
-          distanceFactor={9}
-          zIndexRange={[2, 0]}
-          style={{ pointerEvents: 'auto' }}
-        >
-          <a
-            href="https://designer.webex.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="finder-designer-cta"
-            aria-label="Plan your room with Webex Workspace Designer (opens in a new tab)"
+        <Billboard position={[0, 2.6, -1]}>
+          <Text
+            fontSize={0.22}
+            color="#049fd9"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.005}
+            outlineColor="#05080f"
           >
-            <span className="finder-designer-cta-icon" aria-hidden>
-              ⌗
-            </span>
-            <span>Now plan your room</span>
-            <span className="finder-designer-cta-arrow" aria-hidden>
-              →
-            </span>
-            <span className="finder-designer-cta-meta">Webex Designer ↗</span>
-          </a>
-        </Html>
+            {matching.length === 0
+              ? 'No devices match — try a different combination'
+              : `${matching.length} match${matching.length === 1 ? '' : 'es'}`}
+          </Text>
+        </Billboard>
       )}
 
       {/* Preview ring rotator (only animates when step < 2) */}
