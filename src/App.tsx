@@ -258,24 +258,49 @@ export default function App() {
             href="https://www.webex.com/content/dam/wbx/us/documents/pdf/Collaboration_Device_Product_Matrix_Brochure.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open the official Cisco/Webex Collaboration Device Product Matrix brochure (PDF, opens in a new tab)"
-            title="Open the official Cisco/Webex brochure (PDF)"
+            aria-label="Open the official Cisco/Webex Collaboration Device Product Matrix source document (PDF, opens in a new tab)"
+            title="Collaboration Device Product Matrix (PDF)"
           >
             <span className="source-link-icon" aria-hidden>
               ⤓
             </span>
             <span className="source-link-text">
-              <span className="source-link-label">Source brochure</span>
+              <span className="source-link-label">Source Document</span>
               <span className="source-link-meta">Cisco · Webex · PDF</span>
             </span>
           </a>
-          <span
-            className="catalog-chip"
-            aria-label="Catalog edition: February 2026"
-            title="February 2026 catalog edition"
+          <a
+            className="source-link"
+            href="https://roomos.cisco.com/doc/Welcome/Welcome"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Cisco RoomOS documentation (opens in a new tab)"
+            title="Cisco RoomOS documentation"
           >
-            Feb 2026 catalog
-          </span>
+            <span className="source-link-icon" aria-hidden>
+              ⊞
+            </span>
+            <span className="source-link-text">
+              <span className="source-link-label">Cisco RoomOS ↗</span>
+              <span className="source-link-meta">Device documentation</span>
+            </span>
+          </a>
+          <a
+            className="source-link source-link--gated"
+            href="https://salesresources.cisco.com/Link/Content/DCQGRm7J4VTXP8mHbHhBm3Pqm2qV"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Components and Cables for Collaboration Devices on Cisco Sales Resources (requires CCO login, opens in a new tab)"
+            title="Components and Cables for Collaboration Devices — requires Cisco Connection Online (CCO) login"
+          >
+            <span className="source-link-icon" aria-hidden>
+              ⎔
+            </span>
+            <span className="source-link-text">
+              <span className="source-link-label">Components &amp; Cables ↗</span>
+              <span className="source-link-meta">CCO login required</span>
+            </span>
+          </a>
           <a
             className="designer-link"
             href="https://designer.webex.com/"

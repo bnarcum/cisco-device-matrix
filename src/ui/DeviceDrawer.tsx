@@ -1,7 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Device } from '../data/cisco'
+import type { Category, Device } from '../data/cisco'
 import { CATEGORY_LABELS, ROOM_SIZE_LABELS } from '../data/cisco'
 import { deviceImage } from '../data/deviceImages'
+
+const ROOMOS_DOCS_URL = 'https://roomos.cisco.com/doc/Welcome/Welcome'
+const COMPONENTS_CABLES_URL =
+  'https://salesresources.cisco.com/Link/Content/DCQGRm7J4VTXP8mHbHhBm3Pqm2qV'
+
+const COMPONENTS_CABLES_CATEGORIES = new Set<Category>([
+  'room',
+  'desk',
+  'peripheral',
+  'camera',
+])
+
+function hasRoomOsSoftware(device: Device): boolean {
+  return device.software?.some((entry) => /roomos/i.test(entry)) ?? false
+}
 
 interface Props {
   device: Device | null
@@ -152,12 +167,48 @@ export function DeviceDrawer({
                 href="https://designer.webex.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="drawer-designer-link"
+                className="drawer-external-link"
                 aria-label="Configure this in Cisco Workspace Designer (opens in a new tab)"
               >
                 <span aria-hidden>⌗</span>
                 <span>Configure this in Cisco Workspace Designer ↗</span>
               </a>
+            )}
+
+            {(hasRoomOsSoftware(device) ||
+              COMPONENTS_CABLES_CATEGORIES.has(device.category)) && (
+              <div className="drawer-resource-links">
+                {hasRoomOsSoftware(device) && (
+                  <a
+                    href={ROOMOS_DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="drawer-external-link"
+                    aria-label="Open Cisco RoomOS documentation (opens in a new tab)"
+                  >
+                    <span aria-hidden>⊞</span>
+                    <span>Cisco RoomOS documentation ↗</span>
+                  </a>
+                )}
+                {COMPONENTS_CABLES_CATEGORIES.has(device.category) && (
+                  <a
+                    href={COMPONENTS_CABLES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="drawer-external-link drawer-external-link--gated"
+                    aria-label="Open Components and Cables for Collaboration Devices on Cisco Sales Resources (requires CCO login, opens in a new tab)"
+                    title="Components and Cables for Collaboration Devices — requires Cisco Connection Online (CCO) login"
+                  >
+                    <span aria-hidden>⎔</span>
+                    <span>
+                      Components &amp; Cables for Collaboration Devices ↗
+                      <span className="drawer-external-link-note">
+                        Requires CCO login
+                      </span>
+                    </span>
+                  </a>
+                )}
+              </div>
             )}
 
             <p

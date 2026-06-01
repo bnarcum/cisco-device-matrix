@@ -188,22 +188,7 @@ a:hover {
   flex-wrap: wrap;
 }
 
-/* ── Catalog edition chip + Cisco Workspace Designer pill ───────── */
-.catalog-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--fg-2);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
+/* ── Topbar resource pills (source, RoomOS, components, designer) ─ */
 .designer-link {
   display: inline-flex;
   align-items: center;
@@ -286,12 +271,6 @@ a:hover {
 
   .search-input-wrap {
     max-width: none;
-  }
-}
-
-@media (max-width: 980px) {
-  .catalog-chip {
-    display: none;
   }
 }
 
@@ -549,6 +528,10 @@ a:hover {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fg-3);
+}
+
+.source-link--gated .source-link-meta {
+  color: #e8b86d;
 }
 
 .canvas-wrap {
@@ -918,8 +901,15 @@ a:hover {
   }
 }
 
-/* ── Drawer designer link (room + desk categories) ─────────────── */
-.drawer-designer-link {
+/* ── Drawer external resource links ────────────────────────────── */
+.drawer-resource-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.drawer-external-link {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -936,9 +926,10 @@ a:hover {
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 500;
+  line-height: 1.35;
 }
 
-.drawer-designer-link:hover {
+.drawer-external-link:hover {
   border-color: var(--cisco-primary);
   background: linear-gradient(
     135deg,
@@ -946,6 +937,27 @@ a:hover {
     rgba(4, 159, 217, 0.32) 100%
   );
   text-decoration: none;
+}
+
+.drawer-external-link--gated {
+  align-items: flex-start;
+}
+
+.drawer-external-link-note {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #e8b86d;
+}
+
+.drawer-resource-links .drawer-external-link {
+  margin-top: 0;
+}
+
+.drawer-external-link + .drawer-resource-links {
+  margin-top: 0.5rem;
 }
 
 /* ── Compare modal: copy-link button ───────────────────────────── */
