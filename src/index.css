@@ -1021,11 +1021,11 @@ a:hover {
   background:
     linear-gradient(
       180deg,
-      #f7f4ef 0%,
-      #efece5 55%,
-      #ece9e3 100%
+      #0a0e18 0%,
+      #06090f 55%,
+      #05080f 100%
     );
-  color: #1b1b1f;
+  color: #e5eaf0;
   overflow: hidden;
 }
 
@@ -1043,7 +1043,7 @@ a:hover {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
-  scrollbar-color: rgba(20, 30, 50, 0.25) transparent;
+  scrollbar-color: rgba(229, 234, 240, 0.25) transparent;
   scrollbar-width: thin;
   /* Reserve space for the global category-filter pill (`.filters`)
      which sits at bottom: 1rem inside the shared overlay. Without
@@ -1063,12 +1063,12 @@ a:hover {
 }
 
 .aisle-scroller::-webkit-scrollbar-thumb {
-  background: rgba(20, 30, 50, 0.18);
+  background: rgba(229, 234, 240, 0.18);
   border-radius: 999px;
 }
 
 .aisle-scroller::-webkit-scrollbar-thumb:hover {
-  background: rgba(20, 30, 50, 0.32);
+  background: rgba(229, 234, 240, 0.32);
 }
 
 .aisle-track {
@@ -1085,10 +1085,11 @@ a:hover {
   margin: auto;
   padding: 1rem 1.5rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(8, 14, 26, 0.7);
   border: 1px solid rgba(4, 159, 217, 0.45);
-  color: var(--cisco-graphite);
+  color: #e5eaf0;
   font-size: 0.95rem;
+  backdrop-filter: blur(8px);
 }
 
 /* ── Section bay ───────────────────────────────────────────────── */
@@ -1105,15 +1106,15 @@ a:hover {
   margin: 6px 0 14px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(4, 159, 217, 0.75);
-  color: #0a1a2a;
+  background: rgba(8, 14, 26, 0.7);
+  border: 1px solid rgba(4, 159, 217, 0.55);
+  color: #e5eaf0;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 6px 16px rgba(20, 30, 50, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
 }
 
@@ -1163,15 +1164,15 @@ a:hover {
   background:
     linear-gradient(
       180deg,
-      #fdfaf5 0%,
-      #ebe6dc 55%,
-      #d8d1c3 100%
+      #131824 0%,
+      #0c1018 55%,
+      #070a12 100%
     );
-  border-top: 1px solid rgba(255, 255, 255, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -2px 4px rgba(70, 60, 40, 0.18),
-    0 6px 14px rgba(40, 30, 20, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
 /*  Cisco-blue trim band along the front edge so each shelf reads as
@@ -1183,7 +1184,9 @@ a:hover {
   bottom: 0;
   height: 3px;
   background: var(--cisco-primary);
-  box-shadow: 0 0 6px rgba(4, 159, 217, 0.45);
+  box-shadow:
+    0 0 12px rgba(4, 159, 217, 0.65),
+    0 0 24px rgba(4, 159, 217, 0.25);
 }
 
 /* ── Boards (tall) variant ─────────────────────────────────────── */
@@ -1282,12 +1285,16 @@ a:hover {
   display: block;
   -webkit-user-drag: none;
   user-select: none;
-  filter: drop-shadow(0 6px 10px rgba(20, 30, 50, 0.18));
+  filter:
+    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
   transition: filter 160ms ease;
 }
 
 .aisle-tile:hover .aisle-tile-img {
-  filter: drop-shadow(0 10px 16px rgba(20, 30, 50, 0.26));
+  filter:
+    drop-shadow(0 14px 20px rgba(0, 0, 0, 0.78))
+    drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
 }
 
 .aisle-tile-fallback {
@@ -1296,27 +1303,32 @@ a:hover {
   width: 80%;
   height: 60%;
   border-radius: 10px;
-  background: linear-gradient(135deg, #d8d1c3, #c5beaf);
-  color: var(--cisco-graphite);
+  background: linear-gradient(135deg, #1a1d24, #0e1115);
+  border: 1px solid var(--line);
+  color: #c5cad3;
   font-size: 0.78rem;
   font-weight: 600;
   text-align: center;
   padding: 0.4rem;
 }
 
-/*  Contact shadow — sits behind the img, hugs the bottom of the
-    shelf surface. Width follows the photo's bounding box. */
+/*  Anchor pool — sits behind the img, hugs the bottom of the shelf
+    surface. On the dark backdrop a dark shadow disappears, so this
+    is a SUBTLE BLUE-TINTED GLOW that anchors the product to the
+    plank. The selected-state glow below is just a brighter version
+    of the same effect. */
 .aisle-tile-shadow {
   position: absolute;
   left: 50%;
   bottom: 4px;
   transform: translateX(-50%);
-  width: 78%;
+  width: 72%;
   height: 18px;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    rgba(20, 30, 50, 0.42) 0%,
-    rgba(20, 30, 50, 0) 70%
+    rgba(4, 159, 217, 0.18) 0%,
+    rgba(4, 159, 217, 0.08) 45%,
+    rgba(4, 159, 217, 0) 75%
   );
   filter: blur(6px);
   pointer-events: none;
@@ -1324,12 +1336,13 @@ a:hover {
 }
 
 .aisle-tile:hover .aisle-tile-shadow {
-  width: 88%;
+  width: 84%;
   height: 22px;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    rgba(20, 30, 50, 0.34) 0%,
-    rgba(20, 30, 50, 0) 72%
+    rgba(4, 159, 217, 0.28) 0%,
+    rgba(4, 159, 217, 0.12) 45%,
+    rgba(4, 159, 217, 0) 75%
   );
 }
 
@@ -1359,7 +1372,9 @@ a:hover {
 }
 
 .aisle-tile[data-selected='true'] .aisle-tile-img {
-  filter: drop-shadow(0 12px 18px rgba(4, 159, 217, 0.4));
+  filter:
+    drop-shadow(0 14px 22px rgba(4, 159, 217, 0.55))
+    drop-shadow(0 4px 8px rgba(4, 159, 217, 0.35));
 }
 
 /* ── Caption ──────────────────────────────────────────────────── */
@@ -1376,7 +1391,7 @@ a:hover {
 .aisle-tile-name {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #0a1a2a;
+  color: #f0f3f7;
   line-height: 1.15;
   max-width: 100%;
   overflow: hidden;
@@ -1386,7 +1401,7 @@ a:hover {
 
 .aisle-tile-meta {
   font-size: 0.66rem;
-  color: var(--cisco-graphite);
+  color: rgba(229, 234, 240, 0.65);
   letter-spacing: 0.02em;
   line-height: 1.15;
   max-width: 100%;
@@ -1417,8 +1432,8 @@ a:hover {
   left: 0;
   background: linear-gradient(
     90deg,
-    rgba(247, 244, 239, 0.96) 0%,
-    rgba(247, 244, 239, 0) 100%
+    rgba(5, 8, 15, 0.96) 0%,
+    rgba(5, 8, 15, 0) 100%
   );
 }
 
@@ -1426,8 +1441,8 @@ a:hover {
   right: 0;
   background: linear-gradient(
     270deg,
-    rgba(236, 233, 227, 0.96) 0%,
-    rgba(236, 233, 227, 0) 100%
+    rgba(5, 8, 15, 0.96) 0%,
+    rgba(5, 8, 15, 0) 100%
   );
 }
 
@@ -1442,24 +1457,26 @@ a:hover {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(4, 159, 217, 0.55);
-  background: rgba(255, 255, 255, 0.96);
-  color: #0a1a2a;
+  border: 1px solid rgba(4, 159, 217, 0.4);
+  background: rgba(8, 14, 26, 0.75);
+  color: #e5eaf0;
   font-size: 1.5rem;
   line-height: 1;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(20, 30, 50, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
   z-index: 3;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
+    color 160ms ease,
     transform 160ms ease;
 }
 
 .aisle-chevron:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: var(--cisco-primary);
+  background: rgba(8, 14, 26, 0.9);
+  border-color: rgba(4, 159, 217, 0.8);
   color: var(--cisco-primary);
   transform: translateY(-50%) scale(1.04);
 }
@@ -1482,16 +1499,19 @@ a:hover {
 }
 
 /* ── Floor strip (full width, below scroller) ─────────────────── */
+/*  Reads as ambient Cisco-blue light spilling onto the floor from
+    the shelf trim, rather than a redundant stripe. */
 .aisle-floor {
   flex: 0 0 auto;
   height: 30px;
   background: linear-gradient(
     180deg,
-    #d8d1c3 0%,
-    #c5beaf 100%
+    transparent 0%,
+    rgba(4, 159, 217, 0.08) 50%,
+    transparent 100%
   );
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: inset 0 6px 8px rgba(40, 30, 20, 0.12);
+  border-top: 1px solid var(--line);
+  box-shadow: inset 0 6px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* ── Mobile / narrow viewports ────────────────────────────────── */
